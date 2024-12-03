@@ -14,6 +14,7 @@ services:
       - /app/node_modules
     depends_on:
       - db
+      - redis
 
   db:
     image: postgres:15
@@ -42,8 +43,11 @@ services:
     image: redis:7
     container_name: attendify-redis
     restart: always
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     ports:
       - "${REDIS_PORT}:6379"
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
     volumes:
       - redis_data_attendify:/data
 
