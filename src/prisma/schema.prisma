@@ -1,0 +1,280 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model activities {
+  id                String              @id @default(uuid())
+  name              String              @unique
+  start_at          DateTime
+  end_at            DateTime
+  start_check_in    DateTime
+  end_check_in      DateTime
+  start_check_out   DateTime
+  end_check_out     DateTime
+  token_check_in    String
+  token_check_out   String
+  check_radius      Float               @default(20)
+  limit             Int?
+  is_register       Boolean             @default(false)
+  event_id          String              @unique
+  hour              Float               @default(0)
+  event             events              @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  activity_location activity_location[]
+  target_groups     target_groups[]
+  user_activity     user_activity[]
+
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+  data_logs  Json?
+}
+
+model activity_location {
+  id              String        @id @default(uuid())
+  sub_location_id String
+  activity_id     String
+  sub_location    sub_locations @relation(fields: [sub_location_id], references: [id], onDelete: Cascade)
+  activity        activities    @relation(fields: [activity_id], references: [id], onDelete: Cascade)
+
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+  data_logs  Json?
+}
+
+model events {
+  id            String       @id @default(uuid())
+  name          String       @unique
+  event_type_id String
+  start_date    DateTime
+  end_date      DateTime
+  published_at  DateTime?
+  description   String?
+  banner        String?
+  year          Int
+  file          String?
+  event_type    event_types  @relation(fields: [event_type_id], references: [id], onDelete: Cascade)
+  activities    activities[]
+
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+  data_logs  Json?
+}
+
+model event_types {
+  id     String   @id @default(uuid())
+  name   String   @unique
+  events events[]
+
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+  data_logs  Json?
+}
+
+model sub_locations {
+  id                String              @id @default(uuid())
+  name              String              @unique
+  description       String?
+  location_id       String
+  location          locations           @relation(fields: [location_id], references: [id], onDelete: Cascade)
+  activity_location activity_location[]
+
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+  data_logs  Json?
+}
+
+model locations {
+  id            String          @id @default(uuid())
+  name          String          @unique
+  latitude      Float
+  longitude     Float
+  sub_locations sub_locations[]
+
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+  data_logs  Json?
+}
+
+model target_groups {
+  id          String     @id @default(uuid())
+  activity_id String
+  group_id    String
+  activity    activities @relation(fields: [activity_id], references: [id], onDelete: Cascade)
+  group       groups     @relation(fields: [group_id], references: [id], onDelete: Cascade)
+
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+  data_logs  Json?
+}
+
+model groups {
+  id            String          @id @default(uuid())
+  name          String          @unique
+  description   String?
+  target_groups target_groups[]
+  user_group    user_group[]
+
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+  data_logs  Json?
+}
+
+model user_activity {
+  id                     String     @id @default(uuid())
+  activity_id            String
+  user_id                String
+  join_type_id           String
+  check_in_at            DateTime?
+  check_out_at           DateTime?
+  register_at            DateTime?
+  check_in_picture_path  String?
+  check_out_picture_path String?
+  time_obtained          Float
+  hour_id                String
+  activity               activities @relation(fields: [activity_id], references: [id], onDelete: Cascade)
+  user                   users      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  join_type              join_types @relation(fields: [join_type_id], references: [id], onDelete: Cascade)
+  hour_type              hour_types @relation(fields: [hour_id], references: [id], onDelete: Cascade)
+
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+  data_logs  Json?
+}
+
+model users {
+  id               String             @id @default(uuid())
+  username         String             @unique
+  first_name       String
+  last_name        String
+  email            String             @unique
+  user_group       user_group[]
+  user_role        user_role[]
+  user_permissions user_permissions[]
+  user_activity    user_activity[]
+
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+  data_logs  Json?
+}
+
+model user_group {
+  id       String @id @default(uuid())
+  user_id  String
+  group_id String
+  user     users  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  group    groups @relation(fields: [group_id], references: [id], onDelete: Cascade)
+
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+  data_logs  Json?
+}
+
+model user_permissions {
+  id            String      @id @default(uuid())
+  user_id       String
+  permission_id String
+  user          users       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  permission    permissions @relation(fields: [permission_id], references: [id], onDelete: Cascade)
+
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+  data_logs  Json?
+}
+
+model user_role {
+  id      String @id @default(uuid())
+  user_id String
+  role_id String
+  user    users  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  role    roles  @relation(fields: [role_id], references: [id], onDelete: Cascade)
+
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+  data_logs  Json?
+}
+
+model permissions {
+  id               String             @id @default(uuid())
+  name             String             @unique
+  description      String?
+  user_permissions user_permissions[]
+  role_permissions role_permissions[]
+
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+  data_logs  Json?
+}
+
+model roles {
+  id               String             @id @default(uuid())
+  name             String             @unique
+  description      String?
+  role_permissions role_permissions[]
+  user_role        user_role[]
+
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+  data_logs  Json?
+}
+
+model role_permissions {
+  id            String      @id @default(uuid())
+  role_id       String
+  permission_id String
+  role          roles       @relation(fields: [role_id], references: [id], onDelete: Cascade)
+  permission    permissions @relation(fields: [permission_id], references: [id], onDelete: Cascade)
+
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+  data_logs  Json?
+}
+
+model hour_types {
+  id            String          @id @default(uuid())
+  name          String          @unique
+  description   String?
+  user_activity user_activity[]
+
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+  data_logs  Json?
+}
+
+model join_types {
+  id            String          @id @default(uuid())
+  name          String          @unique
+  description   String?
+  user_activity user_activity[]
+
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+  data_logs  Json?
+}
