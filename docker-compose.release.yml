@@ -9,7 +9,7 @@ services:
     ports:
       - "${APP_PORT}:3000"
     env_file:
-      - .env
+      - .env.release
     volumes:
       - .:/app
       - /app/node_modules
