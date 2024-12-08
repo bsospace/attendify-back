@@ -37,13 +37,13 @@ pipeline {
             }
             steps {
                 script {
-                    if (env.BRANCH_NAME.startsWith('release')) {
-                        def sourceFile = '/var/jenkins_home/credential/attendify-back/.env.release'
-                        def destinationFile = "${WORKSPACE}/.env.release"
-                    } else {
+                    // if (env.BRANCH_NAME.startsWith('release')) {
+                    //     def sourceFile = '/var/jenkins_home/credential/attendify-back/.env.release'
+                    //     def destinationFile = "${WORKSPACE}/.env.release"
+                    // } else {
+                    // }
                         def sourceFile = '/var/jenkins_home/credential/attendify-back/.env'
                         def destinationFile = "${WORKSPACE}/.env"
-                    }
 
                     // ตรวจสอบว่าต้นทางมีอยู่ก่อนคัดลอก
                     if (fileExists(sourceFile)) {
