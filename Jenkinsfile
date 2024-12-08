@@ -28,6 +28,34 @@ pipeline {
             }
         }
 
+        stage('Load Environment') {
+            when {
+                anyOf {
+                    branch 'main'
+                    branch pattern: 'release/.*'
+                }
+            }
+            steps {
+                script {
+                    def envVars = readProperties file: '/var/jenkins_home/credential/attendify-back/.env.release'
+                    envVars.each { key, value ->
+                        env[key] = value
+                    }
+                }
+            }
+            post {
+                always {
+                    echo "Loading Environment"
+                }
+                success {
+                    echo "Loaded Successfully"
+                }
+                failure {
+                    echo "Loaded Failed"
+                }
+            }
+        }
+
         stage("Install Dependencies") {
             steps {
                 script {
