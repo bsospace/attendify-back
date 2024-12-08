@@ -1,0 +1,102 @@
+paths:
+  /auth/login:
+    post:
+      summary: User login
+      description: Handles user login and returns access and refresh tokens.
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: The user's email address.
+                  example: user@example.com
+                password:
+                  type: string
+                  description: The user's password.
+                  example: password123
+              required:
+                - email
+                - password
+      responses:
+        "200":
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Login successful
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            example: 123456
+                          email:
+                            type: string
+                            example: user@example.com
+                          first_name:
+                            type: string
+                            example: John
+                          last_name:
+                            type: string
+                            example: Doe
+                          username:
+                            type: string
+                            example: johndoe
+                      accessToken:
+                        type: string
+                        description: The access token for the user.
+                        example: eyJhbGciOiJIUzI1NiIsInR...
+                      refreshToken:
+                        type: string
+                        description: The refresh token for the user.
+                        example: eyJhbGciOiJIUzI1NiIsInR...
+        "400":
+          description: Invalid request or failed login
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Invalid request
+                  errors:
+                    type: array
+                    items:
+                      type: string
+                    example: ["Email and password are required"]
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: An unexpected error occurred
+tags:
+  - name: Authentication
+    description: Endpoints for user authentication and authorization

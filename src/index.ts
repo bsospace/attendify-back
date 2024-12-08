@@ -1,13 +1,12 @@
-import express, { Request, Response } from 'express';
+import app from "./app";
+import { envConfig } from "./configs/env.config";
+import { authRouter } from "./routes/auth.route";
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+// Register routes
+app.use("/api/v1/auth", authRouter);
 
-app.use(express.json());
-
-app.get('/', (req: Request, res: Response) => {
-  res.send('Hello, World!');
-});
+// Start server
+const PORT = envConfig.appPort;
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
