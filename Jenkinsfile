@@ -37,13 +37,13 @@ pipeline {
             }
             steps {
                 script {
-                    // if (env.BRANCH_NAME.startsWith('release')) {
-                    //     def sourceFile = '/var/jenkins_home/credential/attendify-back/.env.release'
-                    //     def destinationFile = "${WORKSPACE}/.env.release"
-                    // } else {
-                    // }
+                    if (env.BRANCH_NAME == 'main') {
                         def sourceFile = '/var/jenkins_home/credential/attendify-back/.env'
                         def destinationFile = "${WORKSPACE}/.env"
+                    } else {
+                        def sourceFile = '/var/jenkins_home/credential/attendify-back/.env.release'
+                        def destinationFile = "${WORKSPACE}/.env.release"
+                    }
 
                     // ตรวจสอบว่าต้นทางมีอยู่ก่อนคัดลอก
                     if (fileExists(sourceFile)) {
@@ -114,12 +114,12 @@ pipeline {
             }
             steps {
                 script {
-                    if (env.BRANCH_NAME.startsWith('release')) {
-                        echo "Deploying using docker-compose.release.yml"
-                        sh "docker compose -f docker-compose.release.yml up -d"
-                    } else {
+                    if (env.BRANCH_NAME == 'main') {
                         echo "Deploying using docker-compose.yml"
                         sh "docker compose up -d"
+                    } else {
+                        echo "Deploying using docker-compose.release.yml"
+                        sh "docker compose -f docker-compose.release.yml up -d"
                     }
                 }
             }
