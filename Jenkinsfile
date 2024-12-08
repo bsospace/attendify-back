@@ -37,9 +37,16 @@ pipeline {
             }
             steps {
                 script {
-                    def envVars = readProperties file: '/var/jenkins_home/credential/attendify-back/.env.release'
-                    envVars.each { key, value ->
-                        env[key] = value
+                    // กำหนดเส้นทางต้นทางและปลายทาง
+                    def sourceFile = '/var/jenkins_home/credential/attendify-back/.env.release'
+                    def destinationFile = "${WORKSPACE}/.env.release"
+
+                    // ตรวจสอบว่าต้นทางมีอยู่ก่อนคัดลอก
+                    if (fileExists(sourceFile)) {
+                        sh "cp ${sourceFile} ${destinationFile}"
+                        echo "Environment file copied successfully to ${destinationFile}"
+                    } else {
+                        error "Source file does not exist: ${sourceFile}"
                     }
                 }
             }
