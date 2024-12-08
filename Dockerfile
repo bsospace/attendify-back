@@ -10,11 +10,11 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install
 
-# Prisma Client generates a Node.js client for the Prisma API. It is used to access the database in the application code.
-RUN npm run prisma:generate
-
 # Copy the rest of the application code to the working directory
 COPY . .
+
+# Prisma Client generates a Node.js client for the Prisma API. It is used to access the database in the application code.
+RUN npm run prisma:generate
 
 # Build the TypeScript code
 RUN npm run build
