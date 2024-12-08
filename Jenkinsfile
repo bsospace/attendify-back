@@ -37,12 +37,16 @@ pipeline {
             }
             steps {
                 script {
+                    // กำหนดตัวแปร sourceFile และ destinationFile ให้อยู่ในพื้นที่เดียวกัน
+                    def sourceFile
+                    def destinationFile
+                    
                     if (env.BRANCH_NAME == 'main') {
-                        def sourceFile = '/var/jenkins_home/credential/attendify-back/.env'
-                        def destinationFile = "${WORKSPACE}/.env"
+                        sourceFile = '/var/jenkins_home/credential/attendify-back/.env'
+                        destinationFile = "${WORKSPACE}/.env"
                     } else {
-                        def sourceFile = '/var/jenkins_home/credential/attendify-back/.env.release'
-                        def destinationFile = "${WORKSPACE}/.env.release"
+                        sourceFile = '/var/jenkins_home/credential/attendify-back/.env.release'
+                        destinationFile = "${WORKSPACE}/.env.release"
                     }
 
                     // ตรวจสอบว่าต้นทางมีอยู่ก่อนคัดลอก
