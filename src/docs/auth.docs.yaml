@@ -1,8 +1,13 @@
+openapi: 3.0.3
+info:
+  title: User Authentication API
+  description: API for user authentication and token management.
+  version: 1.0.0
 paths:
   /auth/login:
     post:
       summary: User login
-      description: Handles user login and returns access and refresh tokens.
+      description: Handles user login and returns user information, roles, permissions, and authentication tokens. If the user does not exist, a new user will be created.
       tags:
         - Authentication
       requestBody:
@@ -11,18 +16,20 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - email
+                - password
               properties:
                 email:
                   type: string
                   description: The user's email address.
+                  format: email
                   example: user@example.com
                 password:
                   type: string
                   description: The user's password.
+                  format: password
                   example: password123
-              required:
-                - email
-                - password
       responses:
         "200":
           description: Successful login
@@ -33,39 +40,68 @@ paths:
                 properties:
                   success:
                     type: boolean
+                    description: Indicates the login was successful.
                     example: true
                   message:
                     type: string
+                    description: A message indicating the result of the login.
                     example: Login successful
                   data:
                     type: object
+                    description: Contains user information and authentication tokens.
                     properties:
                       user:
                         type: object
+                        description: User profile and role information.
                         properties:
                           id:
                             type: string
-                            example: 123456
+                            description: The user's unique identifier.
+                            example: e6ab44d3-96dc-490d-be77-7ff6503f4738
+                          username:
+                            type: string
+                            description: The user's username.
+                            example: johndoe
                           email:
                             type: string
+                            description: The user's email address.
                             example: user@example.com
                           first_name:
                             type: string
+                            description: The user's first name.
                             example: John
                           last_name:
                             type: string
+                            description: The user's last name.
                             example: Doe
-                          username:
+                          roles:
+                            type: array
+                            description: A list of roles assigned to the user.
+                            items:
+                              type: string
+                            example: ["Admin", "Editor"]
+                          permissions:
+                            type: array
+                            description: A list of permissions assigned to the user.
+                            items:
+                              type: string
+                            example: ["read:user", "write:post"]
+                          service:
                             type: string
-                            example: johndoe
-                      accessToken:
-                        type: string
-                        description: The access token for the user.
-                        example: eyJhbGciOiJIUzI1NiIsInR...
-                      refreshToken:
-                        type: string
-                        description: The refresh token for the user.
-                        example: eyJhbGciOiJIUzI1NiIsInR...
+                            description: The service associated with the user.
+                            example: "attendify"
+                      credentials:
+                        type: object
+                        description: Authentication tokens for the user.
+                        properties:
+                          accessToken:
+                            type: string
+                            description: The access token for the user.
+                            example: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...
+                          refreshToken:
+                            type: string
+                            description: The refresh token for the user.
+                            example: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...
         "400":
           description: Invalid request or failed login
           content:
@@ -75,15 +111,20 @@ paths:
                 properties:
                   success:
                     type: boolean
+                    description: Indicates the request was unsuccessful.
                     example: false
                   message:
                     type: string
+                    description: A message explaining the error.
                     example: Invalid request
                   errors:
                     type: array
+                    description: List of validation errors or specific issues.
                     items:
                       type: string
-                    example: ["Email and password are required"]
+                    example:
+                      - Email and password are required
+                      - Invalid credentials
         "500":
           description: Internal server error
           content:
@@ -93,9 +134,123 @@ paths:
                 properties:
                   success:
                     type: boolean
+                    description: Indicates the server encountered an error.
                     example: false
                   message:
                     type: string
+                    description: A message indicating the server error.
+                    example: An unexpected error occurred
+  /auth/me:
+    get:
+      summary: Get user profile
+      description: Fetches the authenticated user's profile, roles, permissions, and associated service details.
+      tags:
+        - Authentication
+      responses:
+        "200":
+          description: Successful profile retrieval
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates the request was successful.
+                    example: true
+                  message:
+                    type: string
+                    description: A message indicating the result of the request.
+                    example: Get my user info successful
+                  data:
+                    type: object
+                    description: Contains the user's profile details.
+                    properties:
+                      id:
+                        type: string
+                        description: The user's unique identifier.
+                        example: e6ab44d3-96dc-490d-be77-7ff6503f4738
+                      username:
+                        type: string
+                        description: The user's username.
+                        example: johndoe
+                      email:
+                        type: string
+                        description: The user's email address.
+                        example: user@example.com
+                      first_name:
+                        type: string
+                        description: The user's first name.
+                        example: John
+                      last_name:
+                        type: string
+                        description: The user's last name.
+                        example: Doe
+                      created_at:
+                        type: string
+                        format: date-time
+                        description: The timestamp when the user was created.
+                        example: 2024-12-15T15:24:31.921Z
+                      updated_at:
+                        type: string
+                        format: date-time
+                        description: The timestamp when the user's profile was last updated.
+                        example: 2024-12-15T15:24:31.921Z
+                      deleted_at:
+                        type: string
+                        format: date-time
+                        description: The timestamp when the user was deleted, if applicable.
+                        nullable: true
+                        example: null
+                      roles:
+                        type: array
+                        description: A list of roles assigned to the user.
+                        items:
+                          type: string
+                        example: ["Admin"]
+                      permissions:
+                        type: array
+                        description: A list of permissions assigned to the user.
+                        items:
+                          type: string
+                        example: ["read:user"]
+                      service:
+                        type: string
+                        description: The service associated with the user.
+                        example: "attendify"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates the request was unsuccessful due to missing or invalid authentication.
+                    example: false
+                  message:
+                    type: string
+                    description: A message explaining the error.
+                    example: Authorization failed
+                  error:
+                    type: string
+                    description: The specific error causing the failure.
+                    example: Invalid token
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates the server encountered an error.
+                    example: false
+                  message:
+                    type: string
+                    description: A message indicating the server error.
                     example: An unexpected error occurred
 tags:
   - name: Authentication

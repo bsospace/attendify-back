@@ -1,6 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import { AuthService } from "../services/auth.service";
 import { UserService } from "../services/user.service";
+import { users } from "@prisma/client";
+import { permission } from "process";
+import { envConfig } from "src/configs/env.config";
 
 export class AuthController {
 
@@ -13,6 +16,27 @@ export class AuthController {
 
     // Bind methods to preserve `this` context
     this.login = this.login.bind(this);
+    this.me = this.me.bind(this);
+  }
+
+  public async me(req: Request, res: Response): Promise<any> {
+    try {
+      const user = req.user as users
+
+      return res.json({
+        success: true,
+        message: 'Get my user info successful',
+        data: user
+      });
+
+    } catch (error) {
+      // Pass unexpected errors to the next middleware (e.g., error handler)
+      console.error(error);
+      return res.status(500).json({
+        success: false,
+        message: "An unexpected error occurred",
+      });
+    }
   }
 
   /**
@@ -30,7 +54,7 @@ export class AuthController {
         return res.status(400).json({
           success: false,
           message: "Invalid request",
-          errors: ["Email and password are required"],
+          errors: "Email and password are required",
         });
       }
 
@@ -46,17 +70,22 @@ export class AuthController {
       }
 
       const { data } = loginResponse;
-      const accessToken = data?.accessToken;
+
+      const credentials = data?.credentials;
+      const accessToken = credentials?.accessToken;
+      const refreshToken = credentials.refreshToken;
 
       const profile = await this.authService.profile(accessToken);
 
       const user = profile?.data;
 
       let existingUser = await this.userService.getUserByEmail(email);
+      let newUser: users | null = null;
 
       if (!existingUser) {
         // Create a new user if one does not exist
-        existingUser = await this.userService.createUser({
+        newUser = await this.userService.createUser({
+          id: user?.id,
           email,
           first_name: user?.firstName,
           last_name: user?.lastName,
@@ -73,20 +102,33 @@ export class AuthController {
         });
       }
 
+      res.cookie('accessToken', accessToken, {
+        httpOnly: true,
+        secure: envConfig.nodeEnv === 'production',
+        sameSite: 'strict',
+        domain: envConfig.app.cookieDomain,
+      });
+
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: envConfig.nodeEnv === 'production',
+        sameSite: 'strict',
+        domain: envConfig.app.cookieDomain,
+      });
+
       // Respond with success
       return res.status(200).json({
         success: true,
         message: "Login successful",
         data: {
           user: {
-            id: existingUser.id,
-            email: existingUser.email,
-            first_name: existingUser.first_name,
-            last_name: existingUser.last_name,
-            username: existingUser.username,
+            ...existingUser,
+            ...newUser,
           },
-          accessToken,
-          refreshToken: data?.refreshToken,
+          credentials: {
+            accessToken,
+            refreshToken,
+          },
         },
       });
     } catch (error) {
