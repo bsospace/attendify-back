@@ -15,7 +15,7 @@ datasource db {
 
 model activities {
   id                String              @id @default(uuid())
-  name              String              @unique
+  name              String              
   start_at          DateTime
   end_at            DateTime
   start_check_in    DateTime
@@ -27,7 +27,7 @@ model activities {
   check_radius      Float               @default(20)
   limit             Int?
   is_register       Boolean             @default(false)
-  event_id          String              @unique
+  event_id          String
   hour              Float               @default(0)
   event             events              @relation(fields: [event_id], references: [id], onDelete: Cascade)
   activity_location activity_location[]
@@ -55,7 +55,7 @@ model activity_location {
 
 model events {
   id            String       @id @default(uuid())
-  name          String       @unique
+  name          String       
   event_type_id String
   start_date    DateTime
   end_date      DateTime
@@ -75,7 +75,7 @@ model events {
 
 model event_types {
   id     String   @id @default(uuid())
-  name   String   @unique
+  name   String   
   events events[]
 
   created_at DateTime  @default(now())
@@ -86,7 +86,7 @@ model event_types {
 
 model sub_locations {
   id                String              @id @default(uuid())
-  name              String              @unique
+  name              String
   description       String?
   location_id       String
   location          locations           @relation(fields: [location_id], references: [id], onDelete: Cascade)
@@ -100,7 +100,7 @@ model sub_locations {
 
 model locations {
   id            String          @id @default(uuid())
-  name          String          @unique
+  name          String         
   latitude      Float
   longitude     Float
   sub_locations sub_locations[]
@@ -126,7 +126,7 @@ model target_groups {
 
 model groups {
   id            String          @id @default(uuid())
-  name          String          @unique
+  name          String          
   description   String?
   target_groups target_groups[]
   user_group    user_group[]
@@ -162,7 +162,7 @@ model user_activity {
 
 model users {
   id               String             @id @default(uuid())
-  username         String             @unique
+  username         String             
   first_name       String
   last_name        String
   email            String             @unique
@@ -218,7 +218,7 @@ model user_role {
 
 model permissions {
   id               String             @id @default(uuid())
-  name             String             @unique
+  name             String            
   description      String?
   user_permissions user_permissions[]
   role_permissions role_permissions[]
@@ -231,7 +231,7 @@ model permissions {
 
 model roles {
   id               String             @id @default(uuid())
-  name             String             @unique
+  name             String    
   description      String?
   role_permissions role_permissions[]
   user_role        user_role[]
@@ -257,7 +257,7 @@ model role_permissions {
 
 model hour_types {
   id            String          @id @default(uuid())
-  name          String          @unique
+  name          String
   description   String?
   user_activity user_activity[]
 
@@ -269,7 +269,7 @@ model hour_types {
 
 model join_types {
   id            String          @id @default(uuid())
-  name          String          @unique
+  name          String
   description   String?
   user_activity user_activity[]
 

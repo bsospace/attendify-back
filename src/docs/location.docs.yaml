@@ -1,0 +1,465 @@
+paths:
+  /locations:
+    get:
+      summary: Retrieve all locations
+      description: Fetch all locations where `deleted_at` is null, ordered by creation date in descending order.
+      tags:
+        - Locations
+      responses:
+        200:
+          description: A list of locations.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Locations retrieved successfully
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: Location A
+                        address:
+                          type: string
+                          example: 123 Main St
+                        created_at:
+                          type: string
+                          format: date-time
+                          example: 2023-10-01T12:34:56.000Z
+                        updated_at:
+                          type: string
+                          format: date-time
+                          example: 2023-10-02T14:56:78.000Z
+                        deleted_at:
+                          type: string
+                          format: date-time
+                          nullable: true
+                          example: null
+        500:
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Failed to retrieve locations
+  /locations/{id}:
+    get:
+      summary: Retrieve a location by ID
+      description: Fetch a location and its sub-locations by ID.
+      tags:
+        - Locations
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the location to retrieve.
+          schema:
+            type: string
+      responses:
+        200:
+          description: The location and its sub-locations.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Locations retrieved successfully
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          example: "1234"
+                        name:
+                          type: string
+                          example: Location A
+                        address:
+                          type: string
+                          example: 123 Main St
+                        created_at:
+                          type: string
+                          format: date-time
+                          example: 2023-10-01T12:34:56.000Z
+                        updated_at:
+                          type: string
+                          format: date-time
+                          example: 2023-10-02T14:56:78.000Z
+                        deleted_at:
+                          type: string
+                          format: date-time
+                          nullable: true
+                          example: null
+                        sub_locations:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                                example: "5678"
+                              name:
+                                type: string
+                                example: Sub-location 1
+                              location_id:
+                                type: string
+                                example: "1234"
+                              created_at:
+                                type: string
+                                format: date-time
+                                example: 2023-10-01T12:34:56.000Z
+                              updated_at:
+                                type: string
+                                format: date-time
+                                example: 2023-10-02T14:56:78.000Z
+        400:
+          description: Validation error for the `id` parameter.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Location ID must be a string
+        500:
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Failed to create location
+  /locations/create:
+    post:
+      summary: Create a new location
+      description: Create a new location with name, latitude, and longitude.
+      tags:
+        - Locations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "New York"
+                  description: The name of the location.
+                latitude:
+                  type: number
+                  example: 40.7128
+                  description: The latitude of the location.
+                longitude:
+                  type: number
+                  example: -74.0060
+                  description: The longitude of the location.
+              required:
+                - name
+                - latitude
+                - longitude
+      responses:
+        201:
+          description: Location created successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Location created successfully
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: "1234"
+                      name:
+                        type: string
+                        example: "New York"
+                      latitude:
+                        type: number
+                        example: 40.7128
+                      longitude:
+                        type: number
+                        example: -74.0060
+                      created_at:
+                        type: string
+                        format: date-time
+                        example: 2023-10-01T12:34:56.000Z
+                      updated_at:
+                        type: string
+                        format: date-time
+                        example: 2023-10-01T12:34:56.000Z
+        400:
+          description: Validation error or duplicate location name.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Create location failed
+                  errors:
+                    type: string
+                    example: Location name already exists
+        500:
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Failed to create location
+  /locations/{id}/edit:
+    put:
+      summary: Edit a location
+      description: Edit an existing location by providing its ID and updated information.
+      tags:
+        - Locations
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the location to edit.
+          schema:
+            type: string
+            example: "1234"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "Updated Location Name"
+                  description: The new name of the location.
+                latitude:
+                  type: number
+                  example: 35.6895
+                  description: The updated latitude of the location.
+                longitude:
+                  type: number
+                  example: 139.6917
+                  description: The updated longitude of the location.
+              required:
+                - name
+                - latitude
+                - longitude
+      responses:
+        200:
+          description: Location edited successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Location edited successfully
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: "1234"
+                      name:
+                        type: string
+                        example: "Updated Location Name"
+                      latitude:
+                        type: number
+                        example: 35.6895
+                      longitude:
+                        type: number
+                        example: 139.6917
+                      updated_at:
+                        type: string
+                        format: date-time
+                        example: 2023-10-01T12:34:56.000Z
+                      data_logs:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            action:
+                              type: string
+                              example: "edited"
+                            created_at:
+                              type: string
+                              format: date-time
+                              example: 2023-10-01T12:34:56.000Z
+                            updated_at:
+                              type: string
+                              format: date-time
+                              example: 2023-10-01T12:34:56.000Z
+        404:
+          description: Location not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Edit location failed
+                  errors:
+                    type: string
+                    example: Location not found
+        500:
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Failed to create location
+  /locations/{id}/delete:
+    delete:
+      summary: Delete a location
+      description: Soft delete an existing location by marking it as deleted.
+      tags:
+        - Locations
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the location to delete.
+          schema:
+            type: string
+            example: "1234"
+      responses:
+        200:
+          description: Location deleted successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Location deleted successfully
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: "1234"
+                      name:
+                        type: string
+                        example: "Test Location"
+                      latitude:
+                        type: number
+                        example: 35.6895
+                      longitude:
+                        type: number
+                        example: 139.6917
+                      deleted_at:
+                        type: string
+                        format: date-time
+                        example: 2023-10-01T12:34:56.000Z
+                      data_logs:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            action:
+                              type: string
+                              example: "deleted"
+                            created_at:
+                              type: string
+                              format: date-time
+                              example: 2023-10-01T12:34:56.000Z
+                            updated_at:
+                              type: string
+                              format: date-time
+                              example: 2023-10-01T12:34:56.000Z
+        404:
+          description: Location not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Delete location failed
+                  errors:
+                    type: string
+                    example: Location not found
+        500:
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Failed to delete location
