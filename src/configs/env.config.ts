@@ -23,6 +23,7 @@ export const envConfig = {
     frontendUrl: requireEnv('FRONTEND_URL'),
     backendUrl: requireEnv('BACKEND_URL'),
     serviceName: requireEnv('SERVICE_NAME'),
+    cookieDomain: requireEnv('COOKIE_DOMAIN'),
   },
   database: {
     url: requireEnv('DATABASE_URL'),
