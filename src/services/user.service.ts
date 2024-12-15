@@ -43,13 +43,16 @@ export class UserService {
             const roles = user.user_role.map((ur) => ur.role.name);
             let permissions = user.user_role.flatMap((ur) => ur.role.role_permissions.map((p) => p.permission.name));
             permissions = permissions.concat(user.user_permissions.map((up) => up.permission.name));
-
+            
             return {
                 id: user.id,
                 username: user.username,
                 email: user.email,
                 first_name: user.first_name,
                 last_name: user.last_name,
+                created_at: user.created_at,
+                updated_at: user.updated_at,
+                deleted_at: user.deleted_at,
                 roles,
                 permissions,
                 service: envConfig.app.serviceName,
@@ -59,7 +62,7 @@ export class UserService {
             throw new HttpError(500, 'Failed to retrieve user by ID', error);
         }
     }
-    
+
     /**
      * Fetches a user by email from the database.
      * @param email - The email of the user to fetch.
@@ -106,6 +109,9 @@ export class UserService {
                 email: user.email,
                 first_name: user.first_name,
                 last_name: user.last_name,
+                created_at: user.created_at,
+                updated_at: user.updated_at,
+                deleted_at: user.deleted_at,
                 roles,
                 permissions,
                 service: envConfig.app.serviceName,
@@ -116,7 +122,7 @@ export class UserService {
         }
     }
 
-    public async createUser(User: Omit<users, 'id'>): Promise<users> {
+    public async createUser(User: users): Promise<users> {
         try {
             const user = await prisma.users.create({
                 data: {
