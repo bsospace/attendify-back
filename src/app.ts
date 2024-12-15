@@ -5,13 +5,13 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import setupSwagger from "./swagger";
-
+import cookieParser from "cookie-parser";
 
 
 // Load environment variables
 dotenv.config();
 
-// Initialize Express
+// Initiaalize Express
 const app = express();
 
 const corsOptions = {
@@ -30,6 +30,7 @@ app.use(cors(corsOptions)); // Enable CORS for all routes
 app.use(helmet()); // Add security-related HTTP headers
 app.use(morgan("dev")); // Log HTTP requests in development mode
 setupSwagger(app);
+app.use(cookieParser());
 // Routes
 app.get("/", (req: Request, res: Response) => {
   res.send("Hello, World!");
