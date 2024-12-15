@@ -2,10 +2,15 @@ import { envConfig } from "../configs/env.config";
 
 export class AuthService {
 
+  constructor() {
+    this.login = this.login.bind(this);
+    this.profile = this.profile.bind(this);
+  }
+
   public async profile(token: string) {
     try {
       const fetchProfileResponse = await fetch(
-        `${envConfig.openIdApi}/auth//me`,
+        `${envConfig.openIdApi}/auth/profile`,
         {
           method: "GET",
           headers: {
@@ -15,6 +20,8 @@ export class AuthService {
       );
 
       const profileResponse = (await fetchProfileResponse.json()) as { message?: string; error?: string; data?: any };
+
+      console.log(JSON.stringify(profileResponse, null, 2))
 
       // Handle specific API error responses
       if (!fetchProfileResponse.ok) {
