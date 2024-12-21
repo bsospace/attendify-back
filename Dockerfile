@@ -4,6 +4,9 @@ FROM node:22
 # Set the working directory inside the container
 WORKDIR /app
 
+# Change the owner of /app to smart (optional if needed)
+RUN chown -R smart:smart /app
+
 # Copy package.json and package-lock.json to the working directory
 COPY package*.json ./
 
