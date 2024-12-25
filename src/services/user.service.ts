@@ -1,5 +1,5 @@
 import { HttpError } from "src/utils/handler.util";
-import { prisma } from "../prisma/client";
+import { prisma } from "../../prisma/client";
 import { users } from "@prisma/client";
 import { envConfig } from "src/configs/env.config";
 

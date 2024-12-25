@@ -1,5 +1,5 @@
 import { locations, sub_locations } from '@prisma/client'
-import { prisma } from 'src/prisma/client';
+import { prisma } from 'prisma/client';
 
 
 export class LocationService {

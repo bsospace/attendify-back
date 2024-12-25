@@ -1,5 +1,5 @@
 import { sub_locations } from "@prisma/client";
-import { prisma } from "../prisma/client";
+import { prisma } from "../../prisma/client";
 
 export class SubLocationService {
 
