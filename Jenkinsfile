@@ -74,7 +74,7 @@ pipeline {
         stage("Install Dependencies") {
             steps {
                 script {
-                    sh "npm install && npx prisma generate --schema=./src/prisma/schema.prisma"
+                    sh "npm install && npx prisma generate"
                 }
             }
             post {
