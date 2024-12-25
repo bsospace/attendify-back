@@ -44,7 +44,7 @@ CREATE TABLE "events" (
     "start_date" TIMESTAMP(3) NOT NULL,
     "end_date" TIMESTAMP(3) NOT NULL,
     "published_at" TIMESTAMP(3),
-    "description" TEXT,
+    "description" TEXT DEFAULT '',
     "banner" TEXT,
     "year" INTEGER NOT NULL,
     "file" TEXT,
@@ -72,7 +72,7 @@ CREATE TABLE "event_types" (
 CREATE TABLE "sub_locations" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "description" TEXT,
+    "description" TEXT DEFAULT '',
     "location_id" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -113,7 +113,7 @@ CREATE TABLE "target_groups" (
 CREATE TABLE "groups" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "description" TEXT,
+    "description" TEXT DEFAULT '',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
@@ -201,7 +201,7 @@ CREATE TABLE "user_role" (
 CREATE TABLE "permissions" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "description" TEXT,
+    "description" TEXT DEFAULT '',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
@@ -214,7 +214,7 @@ CREATE TABLE "permissions" (
 CREATE TABLE "roles" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "description" TEXT,
+    "description" TEXT DEFAULT '',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
@@ -240,7 +240,7 @@ CREATE TABLE "role_permissions" (
 CREATE TABLE "hour_types" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "description" TEXT,
+    "description" TEXT DEFAULT '',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
@@ -253,7 +253,7 @@ CREATE TABLE "hour_types" (
 CREATE TABLE "join_types" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "description" TEXT,
+    "description" TEXT DEFAULT '',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
@@ -263,19 +263,7 @@ CREATE TABLE "join_types" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "activities_name_key" ON "activities"("name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "activities_event_id_key" ON "activities"("event_id");
-
--- CreateIndex
-CREATE UNIQUE INDEX "events_name_key" ON "events"("name");
-
--- CreateIndex
 CREATE UNIQUE INDEX "event_types_name_key" ON "event_types"("name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "sub_locations_name_key" ON "sub_locations"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "locations_name_key" ON "locations"("name");
@@ -294,6 +282,9 @@ CREATE UNIQUE INDEX "permissions_name_key" ON "permissions"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "roles_name_key" ON "roles"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "role_permissions_role_id_permission_id_key" ON "role_permissions"("role_id", "permission_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "hour_types_name_key" ON "hour_types"("name");

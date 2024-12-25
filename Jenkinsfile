@@ -28,10 +28,53 @@ pipeline {
             }
         }
 
+        stage('Load Environment') {
+            when {
+                anyOf {
+                    branch 'main'
+                    branch pattern: 'release/.*'
+                }
+            }
+            steps {
+                script {
+                    // กำหนดตัวแปร sourceFile และ destinationFile ให้อยู่ในพื้นที่เดียวกัน
+                    def sourceFile
+                    def destinationFile
+                    
+                    if (env.BRANCH_NAME == 'main') {
+                        sourceFile = '/var/jenkins_home/credential/attendify-back/.env'
+                        destinationFile = "${WORKSPACE}/.env"
+                    } else {
+                        sourceFile = '/var/jenkins_home/credential/attendify-back/.env.release'
+                        destinationFile = "${WORKSPACE}/.env.release"
+                    }
+
+                    // ตรวจสอบว่าต้นทางมีอยู่ก่อนคัดลอก
+                    if (fileExists(sourceFile)) {
+                        sh "cp ${sourceFile} ${destinationFile}"
+                        echo "Environment file copied successfully to ${destinationFile}"
+                    } else {
+                        error "Source file does not exist: ${sourceFile}"
+                    }
+                }
+            }
+            post {
+                always {
+                    echo "Loading Environment"
+                }
+                success {
+                    echo "Loaded Successfully"
+                }
+                failure {
+                    echo "Loaded Failed"
+                }
+            }
+        }
+
         stage("Install Dependencies") {
             steps {
                 script {
-                    sh "npm install && npx prisma generate --schema=./src/prisma/schema.prisma"
+                    sh "npm install && npx prisma generate"
                 }
             }
             post {
@@ -75,12 +118,12 @@ pipeline {
             }
             steps {
                 script {
-                    if (env.BRANCH_NAME.startsWith('release')) {
-                        echo "Deploying using docker-compose.release.yml"
-                        sh "docker compose -f docker-compose.release.yml up -d"
-                    } else {
+                    if (env.BRANCH_NAME == 'main') {
                         echo "Deploying using docker-compose.yml"
                         sh "docker compose up -d"
+                    } else {
+                        echo "Deploying using docker-compose.release.yml"
+                        sh "docker compose -f docker-compose.release.yml up -d"
                     }
                 }
             }
