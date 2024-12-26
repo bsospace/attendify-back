@@ -94,9 +94,10 @@ pipeline {
 
         stage('Deploy Application') {
             when {
-                anyOf {
-                    branch 'main'
-                    branch pattern: 'release/.*'
+                not {
+                    expression {
+                        env.ENVIRONMENT == 'other'
+                    }
                 }
             }
             steps {
