@@ -1,5 +1,5 @@
 # Stage 1: Build Stage
-FROM node:22-slim AS build
+FROM node:20-alpine3.17 AS build
 
 # Set the working directory
 WORKDIR /app
@@ -13,14 +13,11 @@ RUN npm ci
 # Copy the rest of the application code
 COPY . .
 
-# Generate Prisma client (if Prisma is used)
-RUN npx prisma generate
-
 # Build the TypeScript code
 RUN npm run build
 
 # Stage 2: Production Runtime Stage
-FROM node:22-slim
+FROM node:20-alpine3.17
 
 # Set the working directory
 WORKDIR /app
@@ -35,8 +32,8 @@ COPY --from=build /app/dist ./dist
 # Copy Prisma schema and other necessary files (if needed)
 COPY --from=build /app/prisma ./prisma
 
-# Expose the port your app runs on
-EXPOSE 3000
+# Generate Prisma client (if Prisma is used)
+RUN npx prisma generate
 
 # Start the application
 CMD ["npm", "run", "start"]

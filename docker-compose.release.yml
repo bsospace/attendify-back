@@ -10,10 +10,6 @@ services:
       - "${APP_PORT}:3000"
     env_file:
       - .env.release
-    volumes:
-      - .:/app
-      - /app/node_modules
-      - /app/dist
     depends_on:
       - db
       - redis
