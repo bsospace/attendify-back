@@ -9,8 +9,8 @@
     "build": "tsc",
     "start": "node dist/src/index.js",
     "prisma:generate": "npx prisma generate",
-    "prisma:generate:release": "DOTENV_CONFIG_PATH=./env.release npx prisma generate --schema=./src/prisma/schema.prisma",
-    "prisma:migrate": "npx prisma migrate dev --name init --schema=./src/prisma/schema.prisma",
+    "prisma:generate:release": "DOTENV_CONFIG_PATH=./env.release npx prisma generate",
+    "prisma:migrate": "npx prisma migrate dev --name init",
     "prisma:seed": "node --loader ts-node/esm ./prisma/seed.ts"
   },
   "repository": {
