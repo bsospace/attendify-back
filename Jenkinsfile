@@ -3,52 +3,53 @@ pipeline {
 
     environment {
         REPO_URL = 'https://github.com/BSO-Space/attendify-back.git'
-        WORKSPACE_DIR = "${env.WORKSPACE}" // ยืนยันว่า WORKSPACE ถูกตั้งค่า
+        WORKSPACE_DIR = "${env.WORKSPACE}"
     }
 
     stages {
-        stage('Checkout Code') {
+        stage('Determine Environment') {
             steps {
                 script {
-                    checkout scm
+                    if (env.BRANCH_NAME ==~ /release\/.*/) {
+                        env.ENVIRONMENT = 'staging'
+                        env.ENV_FILE_CREDENTIAL = 'attendify-staging-env-file'
+                    } else if (env.BRANCH_NAME == 'main') {
+                        env.ENVIRONMENT = 'production'
+                        env.ENV_FILE_CREDENTIAL = 'attendify-prod-env-file'
+                    } else {
+                        env.ENVIRONMENT = 'other'
+                        env.ENV_FILE_CREDENTIAL = 'attendify-feature-env-file'
+                    }
                 }
             }
         }
 
-        stage('Load Environment Variables') {
-            when {
-                anyOf {
-                    branch 'main'
-                    branch pattern: 'release/.*'
-                }
-            }
+        stage('Checkout Code') {
             steps {
-                script {
-                    def sourceFile = env.BRANCH_NAME == 'main' 
-                        ? '/var/jenkins_home/credential/attendify-back/.env' 
-                        : '/var/jenkins_home/credential/attendify-back/.env.release'
-                    
-                    def destinationFile = env.BRANCH_NAME == 'main' 
-                        ? "${WORKSPACE_DIR}/.env" 
-                        : "${WORKSPACE_DIR}/.env.release"
-
-                    if (fileExists(sourceFile)) {
-                        sh "cp ${sourceFile} ${destinationFile}"
-                        echo "Environment file copied to ${destinationFile}"
-                    } else {
-                        error "Environment file does not exist: ${sourceFile}"
-                    }
-                }
+                checkout scm
             }
             post {
                 always {
-                    echo "Environment variables loaded."
+                    echo "Code checkout completed."
                 }
                 success {
-                    echo "Environment loaded successfully."
+                    echo "Code checkout successful."
                 }
                 failure {
-                    echo "Failed to load environment variables."
+                    echo "Code checkout failed."
+                }
+            }
+        }
+
+        stage('Setup .env') {
+            steps {
+                script {
+                    // Load the Secret File and save it as .env
+                    withCredentials([file(credentialsId: "${ENV_FILE_CREDENTIAL}", variable: 'SECRET_ENV_FILE')]) {
+                        def envFile = env.BRANCH_NAME ==~ /release\/.*/ ? '.env.release' : '.env'
+                        sh "cp $SECRET_ENV_FILE ${envFile}"
+                        echo "Loaded environment file for ${env.ENVIRONMENT} using ${envFile}."
+                    }
                 }
             }
         }
