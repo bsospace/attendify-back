@@ -4,8 +4,8 @@ import cacheService from '../services/cache.service';
 import { users } from '@prisma/client';
 import { UserService } from '../services/user.service';
 import { CryptoService } from '../services/crypto.service';
-import { envConfig } from 'src/configs/env.config';
-import { AuthService } from 'src/services/auth.service';
+import { envConfig } from '../configs/env.config';
+import { AuthService } from '../services/auth.service';
 
 declare global {
   namespace Express {

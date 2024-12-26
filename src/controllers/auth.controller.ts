@@ -3,7 +3,7 @@ import { AuthService } from "../services/auth.service";
 import { UserService } from "../services/user.service";
 import { users } from "@prisma/client";
 import { permission } from "process";
-import { envConfig } from "src/configs/env.config";
+import { envConfig } from "../configs/env.config";
 
 export class AuthController {
 

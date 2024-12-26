@@ -1,5 +1,5 @@
 import { createClient, RedisClientType } from "redis";
-import { envConfig } from "src/configs/env.config";
+import { envConfig } from "../configs/env.config";
 
 class CacheService {
   private client: RedisClientType<any>;

@@ -2,8 +2,8 @@ import { Router } from "express";
 
 import { locationValidationRules, locationIdValidationRules } from "../utils/validators/location.util";
 import { validateRequest } from "../middlewares/validate.middleware";
-import { LocationService } from "src/services/location.service";
-import { LocationController } from "src/controllers/location.controller";
+import { LocationService } from "../services/location.service";
+import { LocationController } from "../controllers/location.controller";
 
 const router = Router();
 const locationService = new LocationService();

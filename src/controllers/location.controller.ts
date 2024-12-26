@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { LocationService } from "src/services/location.service";
+import { LocationService } from "../services/location.service";
 import { sub_locations } from "@prisma/client";
 
 export class LocationController {

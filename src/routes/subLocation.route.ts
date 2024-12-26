@@ -1,6 +1,6 @@
 import { Router } from 'express';
 
-import { SubLocationController } from 'src/controllers/subLocation.controller';
+import { SubLocationController } from '../controllers/subLocation.controller';
 import { SubLocationService } from '../services/subLocation.service';
 import { subLocationValidationRules } from '../utils/validators/subLocation.util';
 import { validateRequest } from '../middlewares/validate.middleware';
