@@ -49,6 +49,7 @@ pipeline {
                         def envFile = env.BRANCH_NAME ==~ /release\/.*/ ? '.env.release' : '.env'
                         sh "cp $SECRET_ENV_FILE ${envFile}"
                         sh "ls -la ${envFile}"
+                        sh "cat ${envFile}"
                         echo "Loaded environment file for ${env.ENVIRONMENT} using ${envFile}."
                     }
                 }
