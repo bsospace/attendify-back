@@ -1,34 +1,32 @@
 pipeline {
     agent any
 
+    environment {
+        REPO_URL = 'https://github.com/BSO-Space/attendify-back.git'
+        WORKSPACE_DIR = "${env.WORKSPACE}" // ยืนยันว่า WORKSPACE ถูกตั้งค่า
+    }
+
     stages {
-        stage("Pull") {
+        stage('Checkout Code') {
             steps {
                 script {
-                    checkout([
-                        $class: 'GitSCM',
-                        branches: [[name: "*/${env.BRANCH_NAME}"]],
-                        userRemoteConfigs: [[
-                            url: 'https://github.com/BSO-Space/attendify-back.git',
-                            credentialsId: '3c91d658-54b4-4606-b119-5fd58aa85b28'
-                        ]]
-                    ])
+                    checkout scm
                 }
             }
             post {
                 always {
-                    echo "Pulling from ${env.BRANCH_NAME}"
+                    echo "Checked out SCM."
                 }
                 success {
-                    echo "Pulled Successfully"
+                    echo "Code checkout successful."
                 }
                 failure {
-                    echo "Pulled Failed"
+                    echo "Code checkout failed."
                 }
             }
         }
 
-        stage('Load Environment') {
+        stage('Load Environment Variables') {
             when {
                 anyOf {
                     branch 'main'
@@ -37,79 +35,74 @@ pipeline {
             }
             steps {
                 script {
-                    // กำหนดตัวแปร sourceFile และ destinationFile ให้อยู่ในพื้นที่เดียวกัน
-                    def sourceFile
-                    def destinationFile
+                    def sourceFile = env.BRANCH_NAME == 'main' 
+                        ? '/var/jenkins_home/credential/attendify-back/.env' 
+                        : '/var/jenkins_home/credential/attendify-back/.env.release'
                     
-                    if (env.BRANCH_NAME == 'main') {
-                        sourceFile = '/var/jenkins_home/credential/attendify-back/.env'
-                        destinationFile = "${WORKSPACE}/.env"
-                    } else {
-                        sourceFile = '/var/jenkins_home/credential/attendify-back/.env.release'
-                        destinationFile = "${WORKSPACE}/.env.release"
-                    }
+                    def destinationFile = env.BRANCH_NAME == 'main' 
+                        ? "${WORKSPACE_DIR}/.env" 
+                        : "${WORKSPACE_DIR}/.env.release"
 
-                    // ตรวจสอบว่าต้นทางมีอยู่ก่อนคัดลอก
                     if (fileExists(sourceFile)) {
                         sh "cp ${sourceFile} ${destinationFile}"
-                        echo "Environment file copied successfully to ${destinationFile}"
+                        echo "Environment file copied to ${destinationFile}"
                     } else {
-                        error "Source file does not exist: ${sourceFile}"
+                        error "Environment file does not exist: ${sourceFile}"
                     }
                 }
             }
             post {
                 always {
-                    echo "Loading Environment"
+                    echo "Environment variables loaded."
                 }
                 success {
-                    echo "Loaded Successfully"
+                    echo "Environment loaded successfully."
                 }
                 failure {
-                    echo "Loaded Failed"
+                    echo "Failed to load environment variables."
                 }
             }
         }
 
-        stage("Install Dependencies") {
+        stage('Install Dependencies') {
             steps {
                 script {
-                    sh "npm install && npx prisma generate"
+                    sh 'npm ci && npx prisma generate'
                 }
             }
             post {
                 always {
-                    echo "Installing Dependencies"
+                    echo "Dependencies installation completed."
                 }
                 success {
-                    echo "Installed Successfully"
+                    echo "Dependencies installed successfully."
                 }
                 failure {
-                    echo "Installed Failed"
+                    echo "Dependencies installation failed."
                 }
             }
         }
 
-        stage("Build") {
+        stage('Build Application') {
             steps {
                 script {
-                    sh "npm run build"
+                    sh 'npm run build'
                 }
             }
             post {
                 always {
-                    echo "Building"
+                    echo "Build process completed."
                 }
                 success {
-                    echo "Built Successfully"
+                    echo "Build successful."
                 }
                 failure {
-                    echo "Build Failed"
+                    echo "Build failed."
                 }
             }
         }
 
-        stage("Deploy") {
+        stage('Deploy Application') {
             when {
                 anyOf {
                     branch 'main'
@@ -118,34 +111,37 @@ pipeline {
             }
             steps {
                 script {
-                    if (env.BRANCH_NAME == 'main') {
-                        echo "Deploying using docker-compose.yml"
-                        sh "docker compose up -d"
-                    } else {
-                        echo "Deploying using docker-compose.release.yml"
-                        sh "docker compose -f docker-compose.release.yml up -d"
-                    }
+                    def composeFile = env.BRANCH_NAME == 'main' 
+                        ? 'docker-compose.yml' 
+                        : 'docker-compose.release.yml'
+
+                    echo "Deploying using ${composeFile}"
+                    sh "docker compose -f ${composeFile} up -d --build"
                 }
             }
             post {
                 always {
-                    echo "Deploying"
+                    echo "Deployment process completed."
                 }
                 success {
-                    echo "Deployment Successful"
+                    echo "Application deployed successfully."
                 }
                 failure {
-                    echo "Deployment Failed"
+                    echo "Deployment failed."
                 }
             }
         }
     }
+
     post {
+        always {
+            echo "Pipeline execution completed."
+        }
         success {
-            echo "Pipeline execution successful"
+            echo "Pipeline executed successfully."
         }
         failure {
-            echo "Pipeline execution failed"
+            echo "Pipeline execution failed."
         }
     }
 }
