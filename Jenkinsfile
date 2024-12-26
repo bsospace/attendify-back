@@ -48,6 +48,7 @@ pipeline {
                     withCredentials([file(credentialsId: "${ENV_FILE_CREDENTIAL}", variable: 'SECRET_ENV_FILE')]) {
                         def envFile = env.BRANCH_NAME ==~ /release\/.*/ ? '.env.release' : '.env'
                         sh "cp $SECRET_ENV_FILE ${envFile}"
+                        sh "ls -la ${envFile}"
                         echo "Loaded environment file for ${env.ENVIRONMENT} using ${envFile}."
                     }
                 }
