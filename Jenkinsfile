@@ -13,17 +13,6 @@ pipeline {
                     checkout scm
                 }
             }
-            post {
-                always {
-                    echo "Checked out SCM."
-                }
-                success {
-                    echo "Code checkout successful."
-                }
-                failure {
-                    echo "Code checkout failed."
-                }
-            }
         }
 
         stage('Load Environment Variables') {
