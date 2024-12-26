@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "description": "backend server for attendify",
   "main": "index.ts",
-  "type": "module",
+  "type": "commonjs",
   "scripts": {
     "dev": "nodemon src/index.ts",
     "build": "tsc",
