@@ -30,7 +30,9 @@ app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 app.use(cors(corsOptions)); // Enable CORS for all routes
 app.use(helmet()); // Add security-related HTTP headers
-app.use(morgan("dev")); // Log HTTP requests in development mode
+app.use(morgan(
+  process.env.NODE_ENV === "production" ? "combined" : "dev"
+)); // Log HTTP requests in development mode
 setupSwagger(app);
 app.use(cookieParser());
 
