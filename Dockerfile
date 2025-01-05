@@ -36,4 +36,4 @@ COPY --from=build /app/prisma ./prisma
 RUN npx prisma generate
 
 # Start the application
-CMD ["npm", "run", "start"]
+CMD ["npm", "start"]
