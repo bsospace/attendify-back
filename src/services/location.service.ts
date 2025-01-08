@@ -25,8 +25,8 @@ export class LocationService {
                 data: {
                     ...locations,
                     name: locations.name ?? '',
-                    latitude: locations.latitude ?? 0,
-                    longitude: locations.longitude ?? 0,
+                    latitude: parseFloat(locations.latitude?.toString() ?? '0'),
+                    longitude: parseFloat(locations.longitude?.toString() ?? '0'),
                     created_at: new Date(),
                     updated_at: new Date(),
                     data_logs: data_logs,
