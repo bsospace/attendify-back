@@ -6,6 +6,11 @@ export class LocationController {
     private locationService: LocationService;
 
 
+    /**
+     * @param locationService - LocationService instance
+     * @returns - LocationController instance
+     */
+
     constructor(locationService: LocationService) {
         this.locationService = locationService;
 
@@ -16,14 +21,37 @@ export class LocationController {
         this.deleteLocation = this.deleteLocation.bind(this);
     }
 
+    /**
+     * Get all locations with pagination and search
+     * @param req - Express Request object
+     * @param res - Express Response object
+     * @returns - JSON response with locations data
+     */
+
     public async getAllLocations(req: Request, res: Response): Promise<any> {
         try {
-            const locations = await this.locationService.getAllLocations();
+
+            const page: number = parseInt(req.query.page as string) || 1;
+            const pageSize: number = parseInt(req.query.pageSize as string);
+            const search: string = req.query.search as string || '';
+            const logs: boolean = req.query.logs === 'true';
+
+            const { locations, totalCount } = await this.locationService.getAllLocations(
+                page,
+                pageSize,
+                search,
+                logs
+            );
 
             return res.status(200).json({
                 success: true,
                 message: "Locations retrieved successfully",
                 data: locations,
+                meta: {
+                    page,
+                    pageSize: pageSize || locations.length,
+                    total: totalCount
+                }
             });
         } catch (error) {
             console.error("Error creating location:", error);
@@ -33,6 +61,13 @@ export class LocationController {
             });
         }
     }
+
+    /**
+     * Create a new location 
+     * @param req - Express Request object
+     * @param res - Express Response object
+     * @returns - JSON response with new location data
+     */
 
     public async createLocation(req: Request, res: Response): Promise<any> {
         try {
@@ -78,14 +113,21 @@ export class LocationController {
         }
     }
 
+    /**
+     * Edit a location 
+     * @param req - Express Request object
+     * @param res - Express Response object
+     * @returns - JSON response with updated location data
+     */
+
     public async editLocation(req: Request, res: Response): Promise<any> {
         try {
             const { id } = req.params;
 
-            const { name, latitude, longitude} = req.body;
+            const { name, latitude, longitude } = req.body;
 
             const location = await this.locationService.getLocation({ id });
-            
+
             if (location === null) {
                 return res.status(404).json({
                     success: false,
@@ -105,7 +147,7 @@ export class LocationController {
                 newDataLogs = location.data_logs;
             }
 
-            const editedLocation = await this.locationService.editLocation(id, { name, latitude, longitude}, newDataLogs);
+            const editedLocation = await this.locationService.editLocation(id, { name, latitude, longitude }, newDataLogs);
 
             return res.status(200).json({
                 success: true,
@@ -121,6 +163,13 @@ export class LocationController {
             });
         }
     }
+
+    /**
+     * Delete a location by id
+     * @param req  - Express Request object
+     * @param res - Express Response object
+     * @returns - JSON response with success message
+     */
 
     public async deleteLocation(req: Request, res: Response): Promise<any> {
         try {
@@ -163,12 +212,20 @@ export class LocationController {
         }
     }
 
+    /**
+     * Get a location by id
+     * @param req - Express Request object
+     * @param res - Express Response object
+     * @returns - JSON response with location data
+     */
 
     public async getLocation(req: Request, res: Response): Promise<any> {
         try {
             const { id } = req.params;
-            const locations = await this.locationService.getLocations(id);
-            
+            const logs: boolean = req.query.logs === 'true';
+
+            const locations = await this.locationService.getLocationById(id, logs);
+
             return res.status(200).json({
                 success: true,
                 message: "Locations retrieved successfully",
