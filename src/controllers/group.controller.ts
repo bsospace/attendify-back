@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { GroupService } from '../services/group.service';
+import { DataLog } from '../interfaces';
 
 export class GroupController {
 
@@ -21,18 +22,19 @@ export class GroupController {
 
     public async getAllGroups(req: Request, res: Response): Promise<any> {
         const page: number = parseInt(req.query.page as string) || 1;
-        const pageSize: number = parseInt(req.query.pageSize as string) || 10;
+        const pageSize: number = parseInt(req.query.pageSize as string);
         const search: string = req.query.search as string || '';
+        const logs: boolean = req.query.logs === 'true';
 
         try {
-            const { groups, totalCount } = await this.groupService.getAllGroups(page, pageSize, search);
+            const { groups, totalCount } = await this.groupService.getAllGroups(page, pageSize, search, logs);
 
             return res.status(200).json({
                 message: "Groups retrieved successfully",
                 data: groups,
                 meta: {
                     page,
-                    pageSize,
+                    pageSize: pageSize || groups.length,
                     total: totalCount
                 }
             });
@@ -64,12 +66,15 @@ export class GroupController {
                 });
             }
 
-            const dataLogs = [
+            const dataLogs: DataLog[] = [
                 {
                     action: "created",
                     created_at: new Date(),
                     updated_at: new Date(),
                     created_by: req.user?.email || 'unknown',
+                    meta: [
+                        `name: ${name}`
+                    ]
                 }
             ]
 
@@ -108,14 +113,27 @@ export class GroupController {
                 });
             }
 
-            const dataLogs = [
-                {
-                    action: "updated",
-                    created_at: new Date(),
-                    updated_at: new Date(),
-                    created_by: req.user?.email || 'unknown',
-                }
-            ]
+            const existingData: DataLog[] = Array.isArray(group.data_logs) ? group.data_logs as unknown as DataLog[] : [];
+
+
+            let dataLogs: DataLog[] = []
+
+            if (group.name !== name) {
+                dataLogs = [
+                    ...existingData,
+                    {
+                        action: "updated",
+                        created_at: new Date(),
+                        updated_at: new Date(),
+                        created_by: req.user?.email || 'unknown',
+                        meta: [
+                            `name: ${group.name} -> ${name}`
+                        ]
+                    }
+                ]
+            } else {
+                dataLogs = group.data_logs as unknown as DataLog[] || [];
+            }
 
             const updatedGroup = await this.groupService.updateGroup(id, { name }, dataLogs);
             return res.status(200).json({
