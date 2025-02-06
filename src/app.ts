@@ -40,16 +40,16 @@ app.use(cookieParser());
 async function startPrisma() {
   try {
     await prisma.$connect();
-    console.log("Prisma connected successfully");
+    console.log("[INFO] Prisma connected successfully");
   } catch (error) {
-    console.error("Error connecting to Prisma:", error);
+    console.error("[ERROR] Error connecting to Prisma:", error);
     process.exit(1); // Exit process with error code if Prisma connection fails
   }
 }
 
 // Routes
 app.get("/", (req: Request, res: Response) => {
-  res.send("Hello, World!");
+  res.send("[INFO] Hello, World!");
 });
 
 // Global error handler
@@ -77,7 +77,7 @@ process.on("SIGTERM", gracefulShutdown);
 // Start the app
 startPrisma().then(() => {
   app.listen(envConfig.appPort || 3000, () => {
-    console.log(`Server running on port ${envConfig.appPort}`);
+    console.log(`[INFO] Server running on port http://localhost:${envConfig.appPort}`);
   });
 });
 
