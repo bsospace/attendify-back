@@ -54,7 +54,7 @@ export class AuthController {
         return res.status(400).json({
           success: false,
           message: "Invalid request",
-          errors: "Email and password are required",
+          error: "Email and password are required",
         });
       }
 
