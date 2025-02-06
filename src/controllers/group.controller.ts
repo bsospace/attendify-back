@@ -35,7 +35,8 @@ export class GroupController {
                 meta: {
                     page,
                     pageSize: pageSize || groups.length,
-                    total: totalCount
+                    total: totalCount,
+                    totalPages: Math.ceil(totalCount / (pageSize || groups.length))
                 }
             });
         } catch (error) {

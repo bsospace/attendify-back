@@ -50,7 +50,8 @@ export class LocationController {
                 meta: {
                     page,
                     pageSize: pageSize || locations.length,
-                    total: totalCount
+                    total: totalCount,
+                    totalPages: Math.ceil(totalCount / (pageSize || locations.length)),
                 }
             });
         } catch (error) {
