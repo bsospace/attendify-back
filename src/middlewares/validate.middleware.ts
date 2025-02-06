@@ -21,7 +21,7 @@ export const validateRequest = (req: Request, res: Response, next: NextFunction)
     return res.status(400).json({
       success: false,
       message: "Invalid request",
-      errors: errors.array(),
+      error: errors.array()[0].msg,
     });
   }
   next();
