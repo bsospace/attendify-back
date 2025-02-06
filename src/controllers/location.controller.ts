@@ -44,7 +44,7 @@ export class LocationController {
                 return res.status(400).json({
                     success: false,
                     message: "Create location failed",
-                    errors: "Location name already exists",
+                    error: "Location name already exists",
                 });
             }
 
@@ -90,7 +90,7 @@ export class LocationController {
                 return res.status(404).json({
                     success: false,
                     message: "Edit location failed",
-                    errors: "Location not found",
+                    error: "Location not found",
                 });
             }
 
@@ -132,7 +132,7 @@ export class LocationController {
                 return res.status(404).json({
                     success: false,
                     message: "Delete location failed",
-                    errors: "Location not found",
+                    error: "Location not found",
                 });
             }
 
