@@ -26,7 +26,10 @@ const router = Router();
 router.get('/', authMiddleware.authenticate, requirePermission(Permissions.READ_GROUPS), getGroupsValidationRules(), validateRequest, groupController.getAllGroups);
 
 // Route to create a new group with validation
-router.post('/', authMiddleware.authenticate, requirePermission(Permissions.CREATE_GROUPS),createGroupValidationRules(), validateRequest, groupController.createGroup);
+router.post('/create', authMiddleware.authenticate, requirePermission(Permissions.CREATE_GROUPS),createGroupValidationRules(), validateRequest, groupController.createGroup);
+
+// Route to update a group with validation
+router.put('/:id/edit', authMiddleware.authenticate, requirePermission(Permissions.UPDATE_GROUPS), createGroupValidationRules(), validateRequest, groupController.updateGroup);
 
 export {
     router as groupRouter
