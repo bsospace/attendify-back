@@ -146,7 +146,7 @@ export class GroupController {
             // Validate each user exists
             const missingUsers: string[] = [];
             const existingUsers = await Promise.all(uniqueUserIds.map(async (id) => {
-                const user = await this.userService.getByUsername(id);
+                const user = await this.userService.getUserById(id);
                 if (!user) {
                     missingUsers.push(id);
                     return null;
@@ -185,9 +185,11 @@ export class GroupController {
                 ]
 
                 try {
-                    if (user) {
-                        const addedUser = await this.userService.createGroupWithUser(user.id, group.id, dataLogs);
-                        addedUsers.push(addedUser);
+                    if (user && group) {
+                        if (user?.id && group?.id) {
+                            const addedUser = await this.userService.createGroupWithUser(user.id, group.id, dataLogs);
+                            addedUsers.push(addedUser);
+                        }
                     }
                 } catch (error) {
                     if (user) {
