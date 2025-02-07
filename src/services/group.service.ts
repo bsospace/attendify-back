@@ -77,7 +77,7 @@ export class GroupService {
         }
     }
 
-    public async getById(id: string,logs?: boolean): Promise<groups | null> {
+    public async getById(id: string, logs?: boolean): Promise<groups | null> {
         try {
             const group = await prisma.groups.findFirst({
                 where: {
@@ -161,16 +161,55 @@ export class GroupService {
                 where: { id: userId },
                 data: {
                     user_group: {
-                        connect: { id: groupId }, 
+                        connect: { id: groupId },
                     },
                 },
-                include: { user_group: true } 
+                include: { user_group: true }
             });
 
             return user;
         } catch (error) {
             console.error("Error adding user to group:", error);
             throw new Error("Failed to add user to group.");
+        }
+    }
+
+    public async getUserByGroupName(name: string): Promise<users[]> {
+        try {
+            const users = await prisma.users.findMany({
+                where: {
+                    user_group: {
+                        some: {
+                            group: {
+                                name: name,
+                            },
+                        },
+                    }
+                },
+            });
+
+            return users;
+        } catch (error) {
+            console.error("Error fetching users by group name:", error);
+            throw new Error("Failed to fetch users by group name.");
+        }
+    }
+
+
+    public async deleteGroup(id: string, data_logs: any): Promise<groups> {
+        try {
+            const group = await prisma.groups.update({
+                where: { id: id },
+                data: {
+                    deleted_at: new Date(),
+                    data_logs: data_logs,
+                },
+            });
+
+            return group;
+        } catch (error) {
+            console.error("Error deleting group:", error);
+            throw new Error("Failed to delete group.");
         }
     }
 }
