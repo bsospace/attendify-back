@@ -38,10 +38,12 @@ export class LocationService {
                 where: {
                     deleted_at: null,
                     ...(searchQuery && {
-                        name: {
-                            contains: searchQuery,
-                            mode: 'insensitive',
-                        }
+                        OR: [
+                            { name: { contains: searchQuery, mode: 'insensitive' } },
+                            { latitude: { equals: parseFloat(searchQuery) } },
+                            { longitude: { equals: parseFloat(searchQuery) } },
+                        ],
+                        
                     }),
                 },
                 select: {
