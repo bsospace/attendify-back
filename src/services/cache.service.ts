@@ -16,17 +16,17 @@ class CacheService {
 
     // Attach event listeners
     this.client.on("error", (err) => {
-      console.error("Redis Client Error:", err);
+      console.error("[ERROR] Redis Client Error:", err);
       this.isConnected = false;
     });
 
     this.client.on("connect", () => {
-      console.log("Redis client connected");
+      console.log("[INFO] Redis client connected");
       this.isConnected = true;
     });
 
     this.client.on("end", () => {
-      console.log("Redis client disconnected");
+      console.log("[INFO] Redis client disconnected");
       this.isConnected = false;
     });
 
@@ -41,10 +41,10 @@ class CacheService {
     try {
       if (!this.isConnected) {
         await this.client.connect();
-        console.log("Connected to Redis");
+        console.log("[INFO] Connected to Redis");
       }
     } catch (error) {
-      console.error("Failed to connect to Redis:", error);
+      console.error("[ERROR] Failed to connect to Redis:", error);
     }
   }
 
