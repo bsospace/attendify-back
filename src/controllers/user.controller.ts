@@ -94,15 +94,6 @@ export class UserController {
             // Call service method
             const { users, totalCount } = await this.userService.getUserByGroupName(groupName, page, pageSize, search, logs);
 
-            // Return response if no users found for the group
-            if(!users || users.length == 0) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Users not found",
-                    error: "No users found for the group"
-                });
-            }
-
             // Return response with users
             
             return res.status(200).json({
