@@ -10,6 +10,13 @@ export class UserController {
         this.getAllUsers = this.getAllUsers.bind(this);
     }
 
+    /**
+     * Get all users with pagination and search
+     * @param req - Request object
+     * @param res - Response object
+     * @returns - Response object
+     */
+
     public async getAllUsers(req: Request, res: Response): Promise<any> {
         try {
             // Extract query parameters
