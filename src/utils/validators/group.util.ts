@@ -18,3 +18,12 @@ export const updateGroupValidationRules = () => [
     body("name").optional().isString().withMessage("Name must be a string"),
     param("id").notEmpty().withMessage("ID is required!").isString().withMessage("ID must be a string"),
 ];
+
+
+// Validation rules for the create group with users endpoint
+export const createGroupWithUsersValidationRules = () => [
+    body("name").notEmpty().withMessage("Name is required!").isString().withMessage("Name must be a string"),
+    body("users").notEmpty().withMessage("Users are required!").isArray().withMessage("Users must be an array"),
+    body("description").optional().isString().withMessage("Description must be a string"),
+    body("users.*.id").notEmpty().withMessage("User ID is required!").isString().withMessage("User ID must be a string"),
+];
