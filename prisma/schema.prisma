@@ -160,6 +160,7 @@ model users {
   first_name       String
   last_name        String
   email            String             @unique
+  avatar           String?            @default("")
   user_group       user_group[]
   user_role        user_role[]
   user_permissions user_permissions[]
@@ -243,12 +244,12 @@ model role_permissions {
   role          roles       @relation(fields: [role_id], references: [id], onDelete: Cascade)
   permission    permissions @relation(fields: [permission_id], references: [id], onDelete: Cascade)
 
-  @@unique([role_id, permission_id])
-
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt
   deleted_at DateTime?
   data_logs  Json?
+
+  @@unique([role_id, permission_id])
 }
 
 model hour_types {
