@@ -12,8 +12,8 @@ import { Permissions } from '../utils/permission.util';
 
 // Instantiate GroupService and GroupController
 const groupService = new GroupService();
-const groupController = new GroupController(groupService);
 const userService = new UserService();
+const groupController = new GroupController(groupService,userService);
 const cryptoService = new CryptoService();
 const authService = new AuthService();
 
@@ -30,6 +30,10 @@ router.post('/create', authMiddleware.authenticate, requirePermission(Permission
 
 // Route to update a group with validation
 router.put('/:id/edit', authMiddleware.authenticate, requirePermission(Permissions.UPDATE_GROUPS), createGroupValidationRules(), validateRequest, groupController.updateGroup);
+
+
+// Route create a new group with a user
+router.post('/group-user/create', authMiddleware.authenticate, requirePermission(Permissions.CREATE_GROUPS), groupController.addUserToGroup);
 
 export {
     router as groupRouter

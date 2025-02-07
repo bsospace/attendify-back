@@ -1,16 +1,19 @@
 import { Request, Response } from 'express';
 import { GroupService } from '../services/group.service';
 import { DataLog } from '../interfaces';
+import { UserService } from '../services/user.service';
 
 export class GroupController {
 
-    constructor(private groupService: GroupService) {
+    constructor(private groupService: GroupService, private userService: UserService) {
         this.groupService = groupService;
+        this.userService = userService;
 
         // Bind class methods
         this.getAllGroups = this.getAllGroups.bind(this);
         this.createGroup = this.createGroup.bind(this);
         this.updateGroup = this.updateGroup.bind(this);
+        this.addUserToGroup = this.addUserToGroup.bind(this);
     }
 
     /**
@@ -53,7 +56,7 @@ export class GroupController {
      */
 
     public async createGroup(req: Request, res: Response): Promise<any> {
-        const { name } = req.body;
+        const { name, description } = req.body;
 
         try {
 
@@ -79,7 +82,7 @@ export class GroupController {
                 }
             ]
 
-            const newGroup = await this.groupService.createGroup({ name }, dataLogs);
+            const newGroup = await this.groupService.createGroup({ name, description }, dataLogs);
             return res.status(201).json({
                 message: "Group created successfully",
                 data: newGroup,
@@ -91,6 +94,130 @@ export class GroupController {
         }
     }
 
+    /**
+     * Add user to group
+     * @param req - Express Request object
+     * @param res - Express Response object
+     * @returns - JSON response with updated group data
+     */
+
+    public async addUserToGroup(req: Request, res: Response): Promise<any> {
+        try {
+            const { name, description, users } = req.body;
+
+            // Check if users array is empty
+            if (!users || !Array.isArray(users) || users.length === 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Create group failed",
+                    error: "No users provided",
+                });
+            }
+
+            // Check if the group already exists
+            let existingGroup = await this.groupService.getByName(name);
+
+            // If the group already exists, return an error
+            if (existingGroup) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Create group failed",
+                    error: "Group name already exists",
+                });
+            }
+
+            // Create group with description
+            const group = await this.groupService.createGroup(
+                { name, description },
+                [
+                    {
+                        action: "created",
+                        created_at: new Date(),
+                        updated_at: new Date(),
+                        created_by: req.user?.email || 'unknown',
+                        meta: [`name: ${name}`, `description: ${description}`]
+                    }
+                ]
+            );
+
+            // Extract unique user IDs
+            const uniqueUserIds = [...new Set(users.map((user) => user.id))];
+
+            // Validate each user exists
+            const missingUsers: string[] = [];
+            const existingUsers = await Promise.all(uniqueUserIds.map(async (id) => {
+                const user = await this.userService.getByUsername(id);
+                if (!user) {
+                    missingUsers.push(id);
+                    return null;
+                }
+                return user;
+            }));
+
+            // If any users do not exist, return an error
+            if (missingUsers.length > 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Create group failed",
+                    error: "Some users do not exist",
+                });
+            }
+
+            // Add users to the group
+            const addedUsers = [];
+            const failedUsers = [];
+
+            // Add each user to the group
+            for (const user of existingUsers) {
+
+                let dataLogs: DataLog[] = [
+                    {
+                        action: "created",
+                        created_at: new Date(),
+                        updated_at: new Date(),
+                        created_by: req.user?.email || 'unknown',
+                        meta: [
+                            `name: ${name}`,
+                            `description: ${description}`,
+                            `user_id: ${user?.id}`
+                        ]
+                    }
+                ]
+
+                try {
+                    if (user) {
+                        const addedUser = await this.userService.createGroupWithUser(user.id, group.id, dataLogs);
+                        addedUsers.push(addedUser);
+                    }
+                } catch (error) {
+                    if (user) {
+                        console.warn(`Failed to add user ${user.id} to group ${group.id}:`, error);
+                    }
+                    if (user) {
+                        failedUsers.push(user.id);
+                    }
+                }
+            }
+
+            // Return a success response with the added users and any failed users
+            return res.status(200).json({
+                success: true,
+                message: "Users added to group successfully",
+                data: {
+                    addedUsers,
+                    failedUsers: failedUsers.length > 0 ? failedUsers : null,
+                }
+            });
+
+        } catch (error) {
+            console.error("Error adding user to group:", error);
+            return res.status(500).json({
+                success: false,
+                message: "Failed to add user to group.",
+                error: error
+            });
+        }
+    }
 
     /**
      * Update a group
