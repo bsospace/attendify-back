@@ -237,12 +237,11 @@ export class UserService {
      * @returns - The created user object.
      */
 
-    public async createUser(User: users): Promise<users> {
+    public async createUser(User: Partial<users>): Promise<users> {
         try {
             const user = await prisma.users.create({
                 data: {
                     ...User,
-                    id: User.id,
                     username: User.username || '',
                     email: User.email || '',
                     first_name: User.first_name || '',
