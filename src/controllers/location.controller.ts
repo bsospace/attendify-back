@@ -48,7 +48,7 @@ export class LocationController {
                 message: "Locations retrieved successfully",
                 data: locations,
                 meta: {
-                    page,
+                    page: page || 1,
                     pageSize: pageSize || locations.length,
                     total: totalCount,
                     totalPages: Math.ceil(totalCount / (pageSize || locations.length)),
