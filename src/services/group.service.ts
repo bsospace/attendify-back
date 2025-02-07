@@ -1,4 +1,4 @@
-import { groups } from '@prisma/client';
+import { groups, users } from '@prisma/client';
 import { prisma } from '../../prisma/client';
 
 export class GroupService {
@@ -152,6 +152,25 @@ export class GroupService {
         } catch (error) {
             console.error("Error updating group:", error);
             throw new Error("Failed to update group.");
+        }
+    }
+
+    public async createGroupWithUser(userId: string, groupId: string): Promise<users> {
+        try {
+            const user = await prisma.users.update({
+                where: { id: userId },
+                data: {
+                    user_group: {
+                        connect: { id: groupId }, 
+                    },
+                },
+                include: { user_group: true } 
+            });
+
+            return user;
+        } catch (error) {
+            console.error("Error adding user to group:", error);
+            throw new Error("Failed to add user to group.");
         }
     }
 }
