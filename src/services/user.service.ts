@@ -113,7 +113,7 @@ export class UserService {
        * @param id the user ID
        * @returns the user with the specified ID
        */
-    public async getUserById(id: string): Promise<(Partial<users> & { roles: string[]; permissions: string[]; service: string }) | null> {
+    public async getUserById(id: string): Promise<(Partial<users> & { roles: string[]; permissions: string[]; groups: string[]; service: string }) | null> {
         try {
             const user = await prisma.users.findUnique({
                 where: { id },
@@ -136,6 +136,11 @@ export class UserService {
                         include: {
                             permission: true,
                         },
+                    },
+                    user_group: {
+                        include: {
+                            group: true,
+                        }
                     }
                 },
             });
@@ -159,6 +164,7 @@ export class UserService {
                 roles,
                 permissions,
                 service: envConfig.app.serviceName,
+                groups: user.user_group.map((ug) => ug.group.name),
             };
         } catch (error) {
             console.error('Error retrieving user by ID:', error);
@@ -287,6 +293,80 @@ export class UserService {
         } catch (error) {
             console.error('Error retrieving user by username:', error);
             throw new HttpError(500, 'Failed to retrieve user by username', error);
+        }
+    }
+
+
+    public async getUserByGroupName(
+        name: string,
+        page?: number,
+        pageSize?: number,
+        search?: string,
+        logs: boolean = false,
+    ): Promise<{ users: (Partial<users>)[], totalCount: number }> {
+        try {
+
+            // Check if pagination should be applied
+            const isPaginated = typeof page === 'number' && typeof pageSize === 'number' && page > 0 && pageSize > 0;
+
+            // Default values if pagination is used
+            const currentPage = isPaginated ? page : 1;
+            const currentPageSize = isPaginated ? pageSize : 10;
+            const searchQuery = search?.trim() ?? '';
+
+            // Calculate pagination offset
+            const skip = isPaginated ? (currentPage - 1) * currentPageSize : undefined;
+
+            // Fetch users with optional search and pagination
+            const users = await prisma.users.findMany({
+                where: {
+                    deleted_at: null,
+                    user_group: {
+                        some: {
+                            group: {
+                                name: name,
+                            },
+                        },
+                    },
+                    ...(searchQuery && {
+                        OR: [
+                            { username: { contains: searchQuery, mode: 'insensitive' } },
+                            { email: { contains: searchQuery, mode: 'insensitive' } },
+                            { first_name: { contains: searchQuery, mode: 'insensitive' } },
+                            { last_name: { contains: searchQuery, mode: 'insensitive' } }
+                        ]
+                    })
+                },
+                orderBy: { created_at: 'desc' },
+                ...(isPaginated && { skip, take: currentPageSize }),
+            });
+
+            const totalCount = await prisma.users.count({
+                where: {
+                    deleted_at: null,
+                    user_group: {
+                        some: {
+                            group: {
+                                name: name,
+                            },
+                        },
+                    },
+                    ...(searchQuery && {
+                        OR: [
+                            { username: { contains: searchQuery, mode: 'insensitive' } },
+                            { email: { contains: searchQuery, mode: 'insensitive' } },
+                            { first_name: { contains: searchQuery, mode: 'insensitive' } },
+                            { last_name: { contains: searchQuery, mode: 'insensitive' } }
+                        ]
+                    })
+                }
+            });
+
+            return { users, totalCount};
+            
+        } catch (error) {
+            console.error('Error retrieving user by group name:', error);
+            throw new HttpError(500, 'Failed to retrieve user by group name', error);
         }
     }
 
