@@ -108,7 +108,10 @@ export class UserController {
             return res.status(200).json({
                 success: true,
                 message: "Users retrieved successfully",
-                data: users,
+                data: {
+                    group: group,
+                    users: users,
+                },
                 meta: {
                     page: page || 1,
                     pageSize: pageSize || users.length,
