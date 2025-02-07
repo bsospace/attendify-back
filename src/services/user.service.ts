@@ -1,10 +1,113 @@
 import { HttpError } from "../utils/handler.util";
 import { prisma } from "../../prisma/client";
-import { users } from "@prisma/client";
+import { users, groups, user_group } from '@prisma/client';
 import { envConfig } from "../configs/env.config";
+import { DataLog } from "../interfaces";
 
 export class UserService {
 
+    /**
+     * getUsers retrieves all users from the database
+     * @param page the page number
+     * @param pageSize the number of users per page
+     * @param search the search query
+     * @param logs whether to include logs
+     * @returns all users in the database
+     */
+
+    public async getAllUsers(
+        page?: number,
+        pageSize?: number,
+        search?: string,
+        logs: boolean = false
+    ): Promise<{ users: (Partial<users>)[], totalCount: number }> {
+        try {
+            // Check if pagination should be applied
+            const isPaginated = typeof page === 'number' && typeof pageSize === 'number' && page > 0 && pageSize > 0;
+
+            // Default values if pagination is used
+            const currentPage = isPaginated ? page : 1;
+            const currentPageSize = isPaginated ? pageSize : 10;
+            const searchQuery = search?.trim() ?? '';
+
+            // Calculate pagination offset
+            const skip = isPaginated ? (currentPage - 1) * currentPageSize : undefined;
+
+            // Fetch users with optional search and pagination
+            const users = await prisma.users.findMany({
+                where: {
+                    deleted_at: null,
+                    ...(searchQuery && {
+                        OR: [
+                            { username: { contains: searchQuery, mode: 'insensitive' } },
+                            { email: { contains: searchQuery, mode: 'insensitive' } },
+                            { first_name: { contains: searchQuery, mode: 'insensitive' } },
+                            { last_name: { contains: searchQuery, mode: 'insensitive' } }
+                        ]
+                    })
+                },
+
+                include: {
+                    user_role: {
+                        include: {
+                            role: {
+                                include: {
+                                    role_permissions: {
+                                        include: {
+                                            permission: true,
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    user_permissions: {
+                        include: {
+                            permission: true,
+                        },
+                    },
+                },
+
+                orderBy: { created_at: 'desc' },
+                ...(isPaginated && { skip, take: currentPageSize }), // Apply pagination only if needed
+            });
+
+            // Get total count of users (for pagination)
+            const totalCount = await prisma.users.count({
+                where: {
+                    deleted_at: null,
+                    ...(searchQuery && {
+                        OR: [
+                            { username: { contains: searchQuery, mode: 'insensitive' } },
+                            { email: { contains: searchQuery, mode: 'insensitive' } },
+                            { first_name: { contains: searchQuery, mode: 'insensitive' } },
+                            { last_name: { contains: searchQuery, mode: 'insensitive' } }
+                        ]
+                    })
+                }
+            });
+
+            // Map users to include roles and permissions
+            const mappedUsers = users.map((user) => {
+                const roles = user.user_role.map((ur) => ur.role.name);
+                let permissions = user.user_role.flatMap((ur) => ur.role.role_permissions.map((p) => p.permission.name));
+                permissions = permissions.concat(user.user_permissions.map((up) => up.permission.name));
+
+                return {
+                    id: user.id,
+                    username: user.username,
+                    email: user.email,
+                    first_name: user.first_name,
+                    last_name: user.last_name,
+                };
+            });
+
+            return { users: mappedUsers, totalCount };
+        } catch (error) {
+            console.error('Error retrieving users:', error);
+            throw new HttpError(500, 'Failed to retrieve users', error);
+        }
+    }
     /**
        * getUserById retrieve a user by ID
        * @param id the user ID
@@ -43,7 +146,7 @@ export class UserService {
             const roles = user.user_role.map((ur) => ur.role.name);
             let permissions = user.user_role.flatMap((ur) => ur.role.role_permissions.map((p) => p.permission.name));
             permissions = permissions.concat(user.user_permissions.map((up) => up.permission.name));
-            
+
             return {
                 id: user.id,
                 username: user.username,
@@ -122,6 +225,12 @@ export class UserService {
         }
     }
 
+    /**
+     * Creates a new user in the database.
+     * @param User - The user object to create.
+     * @returns - The created user object.
+     */
+
     public async createUser(User: users): Promise<users> {
         try {
             const user = await prisma.users.create({
@@ -143,4 +252,42 @@ export class UserService {
             throw new Error("Failed to create user.");
         }
     }
+
+    /**
+     * 
+     * @param userId
+     * @param groupId 
+     * @returns 
+     */
+    public async createGroupWithUser(userId: string, groupId: string, logs: DataLog[]): Promise<user_group> {
+        try {
+            // Instead of updating the user, create an entry in user_group table
+            const userGroup = await prisma.user_group.create({
+                data: {
+                    user_id: userId,
+                    group_id: groupId,
+                    data_logs: JSON.stringify(logs),
+                },
+            });
+
+            return userGroup;
+        } catch (error) {
+            console.error(`Failed to add user ${userId} to group ${groupId}:`, error);
+            throw new Error("Failed to add user to group.");
+        }
+    }
+
+    public async getByUsername(username: string): Promise<users | null> {
+        try {
+            const user = await prisma.users.findFirst({
+                where: { username },
+            });
+
+            return user;
+        } catch (error) {
+            console.error('Error retrieving user by username:', error);
+            throw new HttpError(500, 'Failed to retrieve user by username', error);
+        }
+    }
+
 }
