@@ -1,39 +1,40 @@
-# Stage 1: Build Stage
-FROM node:20-alpine3.17 AS build
+# Stage 1: Build the application
+FROM node:22 AS build
 
 # Set the working directory
 WORKDIR /app
 
-# Copy only package files for dependency installation
-COPY package*.json tsconfig.json ./
+# Copy only necessary files for dependency installation
+COPY package*.json ./
 
-# Install all dependencies (including devDependencies)
+# Install dependencies
 RUN npm ci
 
-# Copy the rest of the application code
+# Copy the rest of the application files (e.g., source, Prisma schema)
 COPY . .
 
-# Build the TypeScript code
+# Generate Prisma client for the correct binary targets
+RUN npx prisma generate
+
+# Generate keys for JWT or other secure operations
+RUN npm run generate:key
+
+# Build the application
 RUN npm run build
 
-# Stage 2: Production Runtime Stage
-FROM node:20-alpine3.17
+
+# Stage 2: Production image
+FROM node:22 AS production
 
 # Set the working directory
 WORKDIR /app
 
-# Copy only production dependencies from the build stage
-COPY package*.json ./
-RUN npm ci --only=production
+# Copy only the built application and runtime dependencies
+COPY --from=build /app/dist /app/dist
+COPY --from=build /app/node_modules /app/node_modules
+COPY --from=build /app/prisma /app/prisma
+COPY --from=build /app/package.json /app/package.json
+COPY --from=build /app/keys /app/keys
 
-# Copy the built application from the build stage
-COPY --from=build /app/dist ./dist
-
-# Copy Prisma schema and other necessary files (if needed)
-COPY --from=build /app/prisma ./prisma
-
-# Generate Prisma client (if Prisma is used)
-RUN npx prisma generate
-
-# Start the application
-CMD ["npm", "run", "start"]
+# Run the application
+CMD ["node", "dist/src/app.js"]
