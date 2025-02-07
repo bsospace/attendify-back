@@ -115,6 +115,7 @@ class AuthMiddleware {
           const newUser = await this.userService.createUser({
             email: userProfile.data?.email!,
             username: userProfile.data?.username || "",
+            avatar: userProfile.data?.image || "",
             first_name: userProfile.data?.first_name || "",
             last_name: userProfile.data?.last_name || "",
             created_at: new Date(),
