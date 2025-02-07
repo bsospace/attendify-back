@@ -34,4 +34,4 @@ COPY --from=build /app/package.json /app/package.json
 COPY --from=build /app/keys /app/keys
 
 # Run the application
-CMD ["node", "dist/src/app.js"]
+CMD ["npm", "start"]
