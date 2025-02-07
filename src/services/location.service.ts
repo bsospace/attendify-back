@@ -40,8 +40,6 @@ export class LocationService {
                     ...(searchQuery && {
                         OR: [
                             { name: { contains: searchQuery, mode: 'insensitive' } },
-                            { latitude: { equals: parseFloat(searchQuery) } },
-                            { longitude: { equals: parseFloat(searchQuery) } },
                         ],
                         
                     }),
