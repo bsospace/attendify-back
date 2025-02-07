@@ -79,11 +79,11 @@ class AuthMiddleware {
       }
 
       // Try retrieving the user from cache
-      let user = await cacheService.get<Partial<users>>(`users:${jwtPayload.sub}`);
+      let user = await cacheService.get<Partial<users>>(`users:${jwtPayload.email}`);
 
       if (!user) {
         // Fetch user from database if not cached
-        const userDatabase = await this.userService.getUserById(jwtPayload.sub!);
+        const userDatabase = await this.userService.getUserByEmail(jwtPayload.email!);
 
         if (userDatabase?.deleted_at) {
           return res.status(401).json({
@@ -95,7 +95,7 @@ class AuthMiddleware {
 
         if (userDatabase) {
           user = userDatabase;
-          await cacheService.set(`users:${jwtPayload.sub}`, user, 600);
+          await cacheService.set(`users:${jwtPayload.email}`, user, 600);
         } else {
           // Create a user if not found
           console.log("[INFO] User not found, creating new user...");
@@ -113,7 +113,6 @@ class AuthMiddleware {
 
           console.log("[INFO] Profile:", userProfile);
           const newUser = await this.userService.createUser({
-            id: jwtPayload.sub!,
             email: userProfile.data?.email!,
             username: userProfile.data?.username || "",
             first_name: userProfile.data?.first_name || "",
@@ -130,7 +129,7 @@ class AuthMiddleware {
           });
 
           user = newUser;
-          await cacheService.set(`users:${jwtPayload.sub}`, newUser, 600);
+          await cacheService.set(`users:${jwtPayload.email}`, newUser, 600);
         }
       }
 
