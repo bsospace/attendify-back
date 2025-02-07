@@ -35,6 +35,10 @@ router.put('/:id/edit', authMiddleware.authenticate, requirePermission(Permissio
 // Route create a new group with a user
 router.post('/group-user/create', authMiddleware.authenticate, requirePermission(Permissions.CREATE_GROUPS), groupController.addUserToGroup);
 
+
+// Route to delete a group
+router.delete('/:id/delete', authMiddleware.authenticate, requirePermission(Permissions.DELETE_GROUPS), groupController.deleteGroup);
+
 export {
     router as groupRouter
 };
