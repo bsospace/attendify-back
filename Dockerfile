@@ -16,9 +16,6 @@ COPY . .
 # Generate Prisma client for the correct binary targets
 RUN npx prisma generate
 
-# Generate keys for JWT or other secure operations
-RUN npm run generate:key
-
 # Build the application
 RUN npm run build
 
