@@ -38,10 +38,10 @@ export class GroupService {
                 where: {
                     deleted_at: null,
                     ...(searchQuery && {
-                        name: {
-                            contains: searchQuery,
-                            mode: 'insensitive',
-                        }
+                        OR: [
+                            { name: { contains: searchQuery, mode: 'insensitive' } },
+                            { description: { contains: searchQuery, mode: 'insensitive' } }
+                        ],
                     }),
                 },
                 select: {
