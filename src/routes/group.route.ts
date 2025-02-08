@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { GroupController } from '../controllers/group.controller';
 import { GroupService } from '../services/group.service';
-import { createGroupValidationRules, getGroupsValidationRules } from '../utils/validators/group.util';
+import { createGroupValidationRules, createGroupWithUsersValidationRules, deleteUserFromGroupValidationRules, getGroupsValidationRules } from '../utils/validators/group.util';
 import { validateRequest } from '../middlewares/validate.middleware';
 import AuthMiddleware from '../middlewares/auth.middleware';
 import { UserService } from '../services/user.service';
@@ -33,8 +33,13 @@ router.put('/:id/edit', authMiddleware.authenticate, requirePermission(Permissio
 
 
 // Route create a new group with a user
-router.post('/group-user/create', authMiddleware.authenticate, requirePermission(Permissions.CREATE_GROUPS), groupController.addUserToGroup);
+router.post('/group-user/create', authMiddleware.authenticate, requirePermission(Permissions.CREATE_GROUPS),createGroupWithUsersValidationRules(), groupController.addUserToGroup);
 
+// Route to get all users in a group
+router.put('/group-user/:groupId/edit', authMiddleware.authenticate, requirePermission(Permissions.DELETE_GROUPS), groupController.updateUserInGroup);
+
+// Route to delete a user from a group
+router.delete('/group-user/:groupId/delete', authMiddleware.authenticate, requirePermission(Permissions.DELETE_GROUPS),deleteUserFromGroupValidationRules(), groupController.deleteUserFromGroup);
 
 // Route to delete a group
 router.delete('/:id/delete', authMiddleware.authenticate, requirePermission(Permissions.DELETE_GROUPS), groupController.deleteGroup);

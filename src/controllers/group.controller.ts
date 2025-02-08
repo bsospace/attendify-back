@@ -15,6 +15,8 @@ export class GroupController {
         this.updateGroup = this.updateGroup.bind(this);
         this.addUserToGroup = this.addUserToGroup.bind(this);
         this.deleteGroup = this.deleteGroup.bind(this);
+        this.updateUserInGroup = this.updateUserInGroup.bind(this);
+        this.deleteUserFromGroup = this.deleteUserFromGroup.bind(this);
     }
 
     /**
@@ -244,6 +246,16 @@ export class GroupController {
                 });
             }
 
+            const existingGroup = await this.groupService.getByName(name);
+
+            if (existingGroup !== null && existingGroup.id !== group.id) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Update group failed",
+                    error: "Group name already exists",
+                });
+            }
+
             const existingData: DataLog[] = Array.isArray(group.data_logs) ? group.data_logs as unknown as DataLog[] : [];
 
 
@@ -278,13 +290,23 @@ export class GroupController {
         }
     }
 
+    /**
+     * Update a user in a group
+     * @param req - Express Request object
+     * @param res - Express Response object
+     * @returns - JSON response with updated group data
+     */
+
     public async updateUserInGroup(req: Request, res: Response): Promise<any> {
         const { groupId } = req.params;
         const { users } = req.body;
 
         try {
+
+            // Check if group exists in the database
             const group = await this.groupService.getById(groupId);
 
+            // If the group does not exist, return an error
             if (group === null) {
                 return res.status(404).json({
                     success: false,
@@ -297,9 +319,9 @@ export class GroupController {
             const uniqueUserIds: string[] = [...new Set((users as { id: string }[]).map((user) => user.id))];
             const missingUsers: string[] = [];
 
+            // Validate each user exists
             const existingUsers = await Promise.all(uniqueUserIds.map(async (id) => {
                 const user = await this.userService.getUserById(id);
-
                 if (!user) {
                     missingUsers.push(id);
                     return null;
@@ -307,8 +329,6 @@ export class GroupController {
 
                 return user;
             }));
-
-
 
             // If any users do not exist, return an error
             if (missingUsers.length > 0) {
@@ -368,12 +388,142 @@ export class GroupController {
             }
 
 
+            // Return a success response with the added users and any failed users
+            return res.status(200).json({
+                success: true,
+                message: "Users added to group successfully",
+                data: {
+                    addedUsers,
+                    failedUsers: failedUsers.length > 0 ? failedUsers : null,
+                }
+            });
 
         } catch (error) {
             console.error("Error updating group:", error);
             return res.status(500).json({ message: "Failed to update group." });
         }
     }
+
+    /**
+     * Delete a user from a group
+     * @param req - Express Request object
+     * @param res - Express Response object
+     * @returns - JSON response with deleted user data
+     */
+
+    public async deleteUserFromGroup(req: Request, res: Response): Promise<any> {
+        const { groupId } = req.params;
+        const { users } = req.body
+
+        try {
+
+            // Check if group exists in the database
+            const group = await this.groupService.getById(groupId);
+
+            console.log(req.body);
+
+            // If the group does not exist, return an error
+            if (group === null) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Update group failed",
+                    error: "Group not found",
+                });
+            }
+
+            if (!users || !Array.isArray(users) || users.length === 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Update group failed",
+                    error: "No users provided",
+                });
+            }
+
+            // Extract unique user IDs from the request body
+            const uniqueUserIds: string[] = [...new Set((users as { id: string }[]).map((user) => user.id))];
+            const missingUsers: string[] = [];
+
+            // Validate each user exists
+            const existingUsers = await Promise.all(uniqueUserIds.map(async (id) => {
+                const user = await this.userService.getUserById(id);
+                if (!user) {
+                    missingUsers.push(id);
+                    return null;
+                }
+
+                return user;
+            }));
+
+            // If any users do not exist, return an error
+            if (missingUsers.length > 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Update group failed",
+                    error: "Some users do not exist",
+                });
+            }
+
+            // Delete users from the group
+            const deletedUsers = [];
+            const failedUsers = [];
+
+            // Delete each user from the group
+            for (const user of existingUsers) {
+                if (user) {
+                    let dataLogs: DataLog[] = [
+                        {
+                            action: "updated",
+                            created_at: new Date(),
+                            updated_at: new Date(),
+                            created_by: req.user?.email || 'unknown',
+                            meta: [
+                                `changed_from: ${group.name} -> ${user.groups}`,
+                                `action: deleted`,
+                            ]
+                        }
+                    ];
+
+                    try {
+                        if (user && group) {
+                            if (user?.id && group?.id) {
+                                const deletedUser = await this.userService.deleteUserGroup(user.id, group.id, dataLogs);
+                                deletedUsers.push(deletedUser);
+                            }
+                        }
+                    } catch (error) {
+                        if (user) {
+                            console.warn(`Failed to delete user ${user.id} from group ${group.id}:`, error);
+                        }
+                        if (user) {
+                            failedUsers.push(user.id);
+                        }
+                    }
+                }
+            }
+
+
+            // Return a success response with the deleted user data
+            return res.status(200).json({
+                success: true,
+                message: "User deleted from group successfully",
+                data: {
+                    deletedUsers,
+                    failedUsers: failedUsers.length > 0 ? failedUsers : null,
+                },
+            });
+
+        } catch (error) {
+            console.error("Error deleting user from group:", error);
+            return res.status(500).json({ message: "Failed to delete user from group." });
+        }
+    }
+
+    /**
+     * Delete a group from the database
+     * @param req - Express Request object
+     * @param res - Express Response object
+     * @returns - JSON response with deleted group data
+     */
 
     public async deleteGroup(req: Request, res: Response): Promise<any> {
         const { id } = req.params;
