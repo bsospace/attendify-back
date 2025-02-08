@@ -28,3 +28,10 @@ export const createGroupWithUsersValidationRules = () => [
     body("description").optional().isString().withMessage("Description must be a string"),
     body("users.*.id").notEmpty().withMessage("User ID is required!").isString().withMessage("User ID must be a string"),
 ];
+
+
+export const deleteUserFromGroupValidationRules = () => [
+    body("users").notEmpty().withMessage("Users are required!").isArray().withMessage("Users must be an array"),
+    body("users.*.id").notEmpty().withMessage("User ID is required!").isString().withMessage("User ID must be a string"),
+    param("groupId").notEmpty().withMessage("Group ID is required!").isString().withMessage("Group ID must be a string"),
+]
