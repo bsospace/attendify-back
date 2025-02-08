@@ -36,7 +36,7 @@ router.put('/:id/edit', authMiddleware.authenticate, requirePermission(Permissio
 router.post('/group-user/create', authMiddleware.authenticate, requirePermission(Permissions.CREATE_GROUPS),createGroupWithUsersValidationRules(), groupController.addUserToGroup);
 
 // Route to get all users in a group
-router.put('/group-user/:groupId/edit', authMiddleware.authenticate, requirePermission(Permissions.DELETE_GROUPS), groupController.updateUserInGroup);
+router.put('/group-user/:groupId/edit', authMiddleware.authenticate, requirePermission(Permissions.UPDATE_GROUPS), groupController.updateUserInGroup);
 
 // Route to delete a user from a group
 router.delete('/group-user/:groupId/delete', authMiddleware.authenticate, requirePermission(Permissions.DELETE_GROUPS),deleteUserFromGroupValidationRules(), groupController.deleteUserFromGroup);
