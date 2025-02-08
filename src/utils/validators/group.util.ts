@@ -17,6 +17,7 @@ export const createGroupValidationRules = () => [
 export const updateGroupValidationRules = () => [
     body("name").optional().isString().withMessage("Name must be a string"),
     param("id").notEmpty().withMessage("ID is required!").isString().withMessage("ID must be a string"),
+    body("description").optional().isString().withMessage("Description must be a string"),
 ];
 
 
