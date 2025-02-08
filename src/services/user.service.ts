@@ -182,7 +182,7 @@ export class UserService {
      */
     public async getUserByEmail(email: string): Promise<(Partial<users> & { roles: string[]; permissions: string[]; service: string }) | null> {
         try {
-            const user = await prisma.users.findUnique({
+            const user = await prisma.users.findFirst({
                 where: { email },
                 include: {
                     user_role: {
