@@ -76,7 +76,7 @@ model events {
 
 model event_types {
   id     String   @id @default(uuid())
-  name   String   @unique
+  name   String   
   announce      Boolean       @default(true)
   events events[]
 
@@ -102,7 +102,7 @@ model sub_locations {
 
 model locations {
   id            String          @id @default(uuid())
-  name          String          @unique
+  name          String          
   latitude      Float
   longitude     Float
   sub_locations sub_locations[]
@@ -128,7 +128,7 @@ model target_groups {
 
 model groups {
   id            String          @id @default(uuid())
-  name          String          @unique
+  name          String          
   description   String?         @default("")
   target_groups target_groups[]
   user_group    user_group[]
@@ -164,10 +164,10 @@ model user_activity {
 
 model users {
   id               String             @id @default(uuid())
-  username         String             @unique
+  username         String             
   first_name       String
   last_name        String
-  email            String             @unique
+  email            String             
   avatar           String?            @default("")
   user_group       user_group[]
   user_role        user_role[]
@@ -221,7 +221,7 @@ model user_role {
 
 model permissions {
   id               String             @id @default(uuid())
-  name             String             @unique
+  name             String             
   description      String?            @default("")
   user_permissions user_permissions[]
   role_permissions role_permissions[]
@@ -234,7 +234,7 @@ model permissions {
 
 model roles {
   id               String             @id @default(uuid())
-  name             String             @unique
+  name             String             
   description      String?            @default("")
   role_permissions role_permissions[]
   user_role        user_role[]
@@ -262,7 +262,7 @@ model role_permissions {
 
 model hour_types {
   id            String          @id @default(uuid())
-  name          String          @unique
+  name          String          
   description   String?         @default("")
   user_activity user_activity[]
   activities    activities[]
@@ -275,7 +275,7 @@ model hour_types {
 
 model join_types {
   id            String          @id @default(uuid())
-  name          String          @unique
+  name          String          
   description   String?         @default("")
   user_activity user_activity[]
   activities    activities[]

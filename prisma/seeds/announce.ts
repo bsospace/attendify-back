@@ -6,19 +6,15 @@ async function main() {
   console.log("Seeding database...");
 
   // Insert event types
-  const announceEventType = await prisma.event_types.upsert({
-    where: { name: "announce" },
-    update: {},
-    create: {
+  const announceEventType = await prisma.event_types.create({
+    data: {
       name: "announce",
       announce: true,
     },
   });
 
-  const projectEventType = await prisma.event_types.upsert({
-    where: { name: "project" },
-    update: {},
-    create: {
+  const projectEventType = await prisma.event_types.create({
+    data: {
       name: "project",
       announce: false,
     },

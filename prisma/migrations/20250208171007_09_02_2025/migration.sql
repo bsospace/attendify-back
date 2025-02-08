@@ -268,34 +268,7 @@ CREATE TABLE "join_types" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "event_types_name_key" ON "event_types"("name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "locations_name_key" ON "locations"("name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "groups_name_key" ON "groups"("name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "users_username_key" ON "users"("username");
-
--- CreateIndex
-CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
-
--- CreateIndex
-CREATE UNIQUE INDEX "permissions_name_key" ON "permissions"("name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "roles_name_key" ON "roles"("name");
-
--- CreateIndex
 CREATE UNIQUE INDEX "role_permissions_role_id_permission_id_key" ON "role_permissions"("role_id", "permission_id");
-
--- CreateIndex
-CREATE UNIQUE INDEX "hour_types_name_key" ON "hour_types"("name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "join_types_name_key" ON "join_types"("name");
 
 -- AddForeignKey
 ALTER TABLE "activities" ADD CONSTRAINT "activities_event_id_fkey" FOREIGN KEY ("event_id") REFERENCES "events"("id") ON DELETE CASCADE ON UPDATE CASCADE;
