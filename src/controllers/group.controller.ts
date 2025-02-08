@@ -231,7 +231,7 @@ export class GroupController {
 
     public async updateGroup(req: Request, res: Response): Promise<any> {
         const { id } = req.params;
-        const { name } = req.body;
+        const { name, description } = req.body;
 
         try {
             const group = await this.groupService.getById(id);
@@ -266,7 +266,7 @@ export class GroupController {
                 dataLogs = group.data_logs as unknown as DataLog[] || [];
             }
 
-            const updatedGroup = await this.groupService.updateGroup(id, { name }, dataLogs);
+            const updatedGroup = await this.groupService.updateGroup(id, { name, description }, dataLogs);
             return res.status(200).json({
                 message: "Group updated successfully",
                 data: updatedGroup,
