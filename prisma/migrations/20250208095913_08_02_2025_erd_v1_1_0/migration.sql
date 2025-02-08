@@ -15,6 +15,8 @@ CREATE TABLE "activities" (
     "is_register" BOOLEAN NOT NULL DEFAULT false,
     "event_id" TEXT NOT NULL,
     "hour" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "default_hour_type_id" TEXT,
+    "default_join_type_id" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
@@ -42,6 +44,7 @@ CREATE TABLE "events" (
     "name" TEXT NOT NULL,
     "event_type_id" TEXT NOT NULL,
     "start_date" TIMESTAMP(3) NOT NULL,
+    "announce" BOOLEAN NOT NULL DEFAULT true,
     "end_date" TIMESTAMP(3) NOT NULL,
     "published_at" TIMESTAMP(3),
     "description" TEXT DEFAULT '',
@@ -60,6 +63,7 @@ CREATE TABLE "events" (
 CREATE TABLE "event_types" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
+    "announce" BOOLEAN NOT NULL DEFAULT true,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
@@ -295,6 +299,12 @@ CREATE UNIQUE INDEX "join_types_name_key" ON "join_types"("name");
 
 -- AddForeignKey
 ALTER TABLE "activities" ADD CONSTRAINT "activities_event_id_fkey" FOREIGN KEY ("event_id") REFERENCES "events"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "activities" ADD CONSTRAINT "activities_default_hour_type_id_fkey" FOREIGN KEY ("default_hour_type_id") REFERENCES "hour_types"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "activities" ADD CONSTRAINT "activities_default_join_type_id_fkey" FOREIGN KEY ("default_join_type_id") REFERENCES "join_types"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "activity_location" ADD CONSTRAINT "activity_location_sub_location_id_fkey" FOREIGN KEY ("sub_location_id") REFERENCES "sub_locations"("id") ON DELETE CASCADE ON UPDATE CASCADE;

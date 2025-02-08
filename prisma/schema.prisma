@@ -28,6 +28,12 @@ model activities {
   target_groups     target_groups[]
   user_activity     user_activity[]
 
+  default_hour_type_id String?
+  default_hour_type    hour_types?    @relation(fields: [default_hour_type_id], references: [id])
+
+  default_join_type_id String?
+  default_join_type    join_types?    @relation(fields: [default_join_type_id], references: [id])
+
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt
   deleted_at DateTime?
@@ -52,6 +58,7 @@ model events {
   name          String
   event_type_id String
   start_date    DateTime
+  announce      Boolean       @default(true)
   end_date      DateTime
   published_at  DateTime?
   description   String?      @default("")
@@ -70,6 +77,7 @@ model events {
 model event_types {
   id     String   @id @default(uuid())
   name   String   @unique
+  announce      Boolean       @default(true)
   events events[]
 
   created_at DateTime  @default(now())
@@ -257,6 +265,7 @@ model hour_types {
   name          String          @unique
   description   String?         @default("")
   user_activity user_activity[]
+  activities    activities[]
 
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt
@@ -269,6 +278,7 @@ model join_types {
   name          String          @unique
   description   String?         @default("")
   user_activity user_activity[]
+  activities    activities[]
 
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt
