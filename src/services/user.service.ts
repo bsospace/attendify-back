@@ -279,6 +279,13 @@ export class UserService {
                 },
             });
 
+            await prisma.groups.update({
+                where: { id: groupId },
+                data: {
+                    updated_at: new Date(),
+                },
+            });
+
             return userGroup;
         } catch (error) {
             console.error(`Failed to add user ${userId} to group ${groupId}:`, error);
@@ -308,29 +315,15 @@ export class UserService {
         logs: boolean = false,
     ): Promise<{ users: (Partial<users>)[], totalCount: number }> {
         try {
-
-            // Check if pagination should be applied
             const isPaginated = typeof page === 'number' && typeof pageSize === 'number' && page > 0 && pageSize > 0;
-
-            // Default values if pagination is used
             const currentPage = isPaginated ? page : 1;
             const currentPageSize = isPaginated ? pageSize : 10;
             const searchQuery = search?.trim() ?? '';
 
-            // Calculate pagination offset
-            const skip = isPaginated ? (currentPage - 1) * currentPageSize : undefined;
-
-            // Fetch users with optional search and pagination
-            const users = await prisma.users.findMany({
+            // Fetch all users and apply filtering in JavaScript
+            const allUsers = await prisma.users.findMany({
                 where: {
-                    deleted_at: null,
-                    user_group: {
-                        some: {
-                            group: {
-                                name: name,
-                            },
-                        },
-                    },
+                    deleted_at: null, // Exclude soft-deleted users
                     ...(searchQuery && {
                         OR: [
                             { username: { contains: searchQuery, mode: 'insensitive' } },
@@ -340,37 +333,72 @@ export class UserService {
                         ]
                     })
                 },
-                orderBy: { created_at: 'desc' },
-                ...(isPaginated && { skip, take: currentPageSize }),
-            });
-
-            const totalCount = await prisma.users.count({
-                where: {
-                    deleted_at: null,
+                include: {
                     user_group: {
-                        some: {
-                            group: {
-                                name: name,
-                            },
-                        },
+                        include: {
+                            group: true,
+                        }
                     },
-                    ...(searchQuery && {
-                        OR: [
-                            { username: { contains: searchQuery, mode: 'insensitive' } },
-                            { email: { contains: searchQuery, mode: 'insensitive' } },
-                            { first_name: { contains: searchQuery, mode: 'insensitive' } },
-                            { last_name: { contains: searchQuery, mode: 'insensitive' } }
-                        ]
-                    })
-                }
+                },
+                orderBy: { created_at: 'desc' },
             });
 
-            return { users, totalCount};
-            
+            // Filter users who belong to the specified group and ensure `deleted_at` is null for group and user_group
+            const filteredUsers = allUsers.filter(user =>
+                user.user_group.some(ug =>
+                    ug.group.name === name && ug.deleted_at === null && ug.group.deleted_at === null
+                )
+            );
+
+            // Apply pagination AFTER filtering
+            const skip = (currentPage - 1) * currentPageSize;
+            const paginatedUsers = filteredUsers.slice(skip, skip + currentPageSize);
+            const totalCount = filteredUsers.length;
+
+            return { users: paginatedUsers, totalCount };
+
         } catch (error) {
             console.error('Error retrieving user by group name:', error);
             throw new HttpError(500, 'Failed to retrieve user by group name', error);
         }
     }
 
+    public async deleteUserGroup(userId: string, groupId: string, logs: DataLog[]): Promise<user_group> {
+        try {
+            // Check if the user is in the group
+            const userGroup = await prisma.user_group.findFirst({
+                where: {
+                    user_id: userId,
+                    group_id: groupId,
+                    deleted_at: null,
+                },
+            });
+
+            if (!userGroup) {
+                throw new Error("User not found in group or already removed.");
+            }
+
+            // Update the user_group entry (soft delete)
+            const updatedUserGroup = await prisma.user_group.update({
+                where: { id: userGroup.id },  // Use `id` since `user_id, group_id` is not unique
+                data: {
+                    deleted_at: new Date(),
+                    data_logs: JSON.stringify(logs),  // Store as JSON (Prisma handles JSON fields natively)
+                },
+            });
+            
+            // update at in group
+            await prisma.groups.update({
+                where: { id: groupId },
+                data: {
+                    updated_at: new Date(),
+                },
+            });
+
+            return updatedUserGroup;
+        } catch (error) {
+            console.error(`Failed to remove user ${userId} from group ${groupId}:`, error);
+            throw new Error("Failed to remove user from group.");
+        }
+    }
 }
