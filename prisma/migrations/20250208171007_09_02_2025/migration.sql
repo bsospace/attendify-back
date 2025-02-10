@@ -15,6 +15,8 @@ CREATE TABLE "activities" (
     "is_register" BOOLEAN NOT NULL DEFAULT false,
     "event_id" TEXT NOT NULL,
     "hour" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "default_hour_type_id" TEXT,
+    "default_join_type_id" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
@@ -42,9 +44,10 @@ CREATE TABLE "events" (
     "name" TEXT NOT NULL,
     "event_type_id" TEXT NOT NULL,
     "start_date" TIMESTAMP(3) NOT NULL,
+    "announce" BOOLEAN NOT NULL DEFAULT true,
     "end_date" TIMESTAMP(3) NOT NULL,
     "published_at" TIMESTAMP(3),
-    "description" TEXT,
+    "description" TEXT DEFAULT '',
     "banner" TEXT,
     "year" INTEGER NOT NULL,
     "file" TEXT,
@@ -60,6 +63,7 @@ CREATE TABLE "events" (
 CREATE TABLE "event_types" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
+    "announce" BOOLEAN NOT NULL DEFAULT true,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
@@ -72,7 +76,7 @@ CREATE TABLE "event_types" (
 CREATE TABLE "sub_locations" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "description" TEXT,
+    "description" TEXT DEFAULT '',
     "location_id" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -113,7 +117,7 @@ CREATE TABLE "target_groups" (
 CREATE TABLE "groups" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "description" TEXT,
+    "description" TEXT DEFAULT '',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
@@ -150,6 +154,7 @@ CREATE TABLE "users" (
     "first_name" TEXT NOT NULL,
     "last_name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
+    "avatar" TEXT DEFAULT '',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
@@ -201,7 +206,7 @@ CREATE TABLE "user_role" (
 CREATE TABLE "permissions" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "description" TEXT,
+    "description" TEXT DEFAULT '',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
@@ -214,7 +219,7 @@ CREATE TABLE "permissions" (
 CREATE TABLE "roles" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "description" TEXT,
+    "description" TEXT DEFAULT '',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
@@ -240,7 +245,7 @@ CREATE TABLE "role_permissions" (
 CREATE TABLE "hour_types" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "description" TEXT,
+    "description" TEXT DEFAULT '',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
@@ -253,7 +258,7 @@ CREATE TABLE "hour_types" (
 CREATE TABLE "join_types" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "description" TEXT,
+    "description" TEXT DEFAULT '',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
@@ -263,46 +268,16 @@ CREATE TABLE "join_types" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "activities_name_key" ON "activities"("name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "activities_event_id_key" ON "activities"("event_id");
-
--- CreateIndex
-CREATE UNIQUE INDEX "events_name_key" ON "events"("name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "event_types_name_key" ON "event_types"("name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "sub_locations_name_key" ON "sub_locations"("name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "locations_name_key" ON "locations"("name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "groups_name_key" ON "groups"("name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "users_username_key" ON "users"("username");
-
--- CreateIndex
-CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
-
--- CreateIndex
-CREATE UNIQUE INDEX "permissions_name_key" ON "permissions"("name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "roles_name_key" ON "roles"("name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "hour_types_name_key" ON "hour_types"("name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "join_types_name_key" ON "join_types"("name");
+CREATE UNIQUE INDEX "role_permissions_role_id_permission_id_key" ON "role_permissions"("role_id", "permission_id");
 
 -- AddForeignKey
 ALTER TABLE "activities" ADD CONSTRAINT "activities_event_id_fkey" FOREIGN KEY ("event_id") REFERENCES "events"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "activities" ADD CONSTRAINT "activities_default_hour_type_id_fkey" FOREIGN KEY ("default_hour_type_id") REFERENCES "hour_types"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "activities" ADD CONSTRAINT "activities_default_join_type_id_fkey" FOREIGN KEY ("default_join_type_id") REFERENCES "join_types"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "activity_location" ADD CONSTRAINT "activity_location_sub_location_id_fkey" FOREIGN KEY ("sub_location_id") REFERENCES "sub_locations"("id") ON DELETE CASCADE ON UPDATE CASCADE;

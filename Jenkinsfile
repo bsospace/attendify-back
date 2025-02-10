@@ -1,151 +1,140 @@
 pipeline {
     agent any
 
+    environment {
+        REPO_URL = 'https://github.com/BSO-Space/attendify-back.git'
+        WORKSPACE_DIR = "${env.WORKSPACE}"
+    }
+
     stages {
-        stage("Pull") {
+        stage('Determine Environment') {
             steps {
                 script {
-                    checkout([
-                        $class: 'GitSCM',
-                        branches: [[name: "*/${env.BRANCH_NAME}"]],
-                        userRemoteConfigs: [[
-                            url: 'https://github.com/BSO-Space/attendify-back.git',
-                            credentialsId: '3c91d658-54b4-4606-b119-5fd58aa85b28'
-                        ]]
-                    ])
-                }
-            }
-            post {
-                always {
-                    echo "Pulling from ${env.BRANCH_NAME}"
-                }
-                success {
-                    echo "Pulled Successfully"
-                }
-                failure {
-                    echo "Pulled Failed"
+                    if (env.BRANCH_NAME ==~ /release\/.*/) {
+                        env.ENVIRONMENT = 'staging'
+                        env.ENV_FILE_CREDENTIAL = 'attendify-staging-env-file'
+                    } else if (env.BRANCH_NAME == 'main') {
+                        env.ENVIRONMENT = 'production'
+                        env.ENV_FILE_CREDENTIAL = 'attendify-prod-env-file'
+                    } else {
+                        env.ENVIRONMENT = 'other'
+                        env.ENV_FILE_CREDENTIAL = 'attendify-feature-env-file'
+                    }
                 }
             }
         }
 
-        stage('Load Environment') {
+        stage('Checkout Code') {
+            steps {
+                checkout scm
+            }
+            post {
+                always {
+                    echo "Code checkout completed."
+                }
+                success {
+                    echo "Code checkout successful."
+                }
+                failure {
+                    echo "Code checkout failed."
+                }
+            }
+        }
+
+        stage('Setup .env') {
+            steps {
+                script {
+                    // Load the Secret File and save it as .env
+                    withCredentials([file(credentialsId: "${ENV_FILE_CREDENTIAL}", variable: 'SECRET_ENV_FILE')]) {
+                        def envFile = env.BRANCH_NAME ==~ /release\/.*/ ? '.env.release' : '.env'
+                        sh "cp $SECRET_ENV_FILE ${envFile}"
+                        sh "ls -la ${envFile}"
+                        sh "cat ${envFile}"
+                        echo "Loaded environment file for ${env.ENVIRONMENT} using ${envFile}."
+                    }
+                }
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                script {
+                    sh 'npm ci && npx prisma generate'
+                }
+            }
+            post {
+                always {
+                    echo "Dependencies installation completed."
+                }
+                success {
+                    echo "Dependencies installed successfully."
+                }
+                failure {
+                    echo "Dependencies installation failed."
+                }
+            }
+        }
+
+        stage('Build Application') {
+            steps {
+                script {
+                    sh 'npm run build'
+                }
+            }
+            post {
+                always {
+                    echo "Build process completed."
+                }
+                success {
+                    echo "Build successful."
+                }
+                failure {
+                    echo "Build failed."
+                }
+            }
+        }
+
+        stage('Deploy Application') {
             when {
-                anyOf {
-                    branch 'main'
-                    branch pattern: 'release/.*'
-                }
-            }
-            steps {
-                script {
-                    // กำหนดตัวแปร sourceFile และ destinationFile ให้อยู่ในพื้นที่เดียวกัน
-                    def sourceFile
-                    def destinationFile
-                    
-                    if (env.BRANCH_NAME == 'main') {
-                        sourceFile = '/var/jenkins_home/credential/attendify-back/.env'
-                        destinationFile = "${WORKSPACE}/.env"
-                    } else {
-                        sourceFile = '/var/jenkins_home/credential/attendify-back/.env.release'
-                        destinationFile = "${WORKSPACE}/.env.release"
-                    }
-
-                    // ตรวจสอบว่าต้นทางมีอยู่ก่อนคัดลอก
-                    if (fileExists(sourceFile)) {
-                        sh "cp ${sourceFile} ${destinationFile}"
-                        echo "Environment file copied successfully to ${destinationFile}"
-                    } else {
-                        error "Source file does not exist: ${sourceFile}"
+                not {
+                    expression {
+                        env.ENVIRONMENT == 'other'
                     }
                 }
             }
-            post {
-                always {
-                    echo "Loading Environment"
-                }
-                success {
-                    echo "Loaded Successfully"
-                }
-                failure {
-                    echo "Loaded Failed"
-                }
-            }
-        }
-
-        stage("Install Dependencies") {
             steps {
                 script {
-                    sh "npm install && npx prisma generate --schema=./src/prisma/schema.prisma"
-                }
-            }
-            post {
-                always {
-                    echo "Installing Dependencies"
-                }
-                success {
-                    echo "Installed Successfully"
-                }
-                failure {
-                    echo "Installed Failed"
-                }
-            }
-        }
+                    def composeFile = env.BRANCH_NAME == 'main' 
+                        ? 'docker-compose.yml' 
+                        : 'docker-compose.release.yml'
 
-        stage("Build") {
-            steps {
-                script {
-                    sh "npm run build"
+                    echo "Deploying using ${composeFile}"
+                    sh "docker compose -f ${composeFile} up -d --build"
                 }
             }
             post {
                 always {
-                    echo "Building"
+                    echo "Deployment process completed."
                 }
                 success {
-                    echo "Built Successfully"
+                    echo "Application deployed successfully."
                 }
                 failure {
-                    echo "Build Failed"
-                }
-            }
-        }
-
-        stage("Deploy") {
-            when {
-                anyOf {
-                    branch 'main'
-                    branch pattern: 'release/.*'
-                }
-            }
-            steps {
-                script {
-                    if (env.BRANCH_NAME == 'main') {
-                        echo "Deploying using docker-compose.yml"
-                        sh "docker compose up -d"
-                    } else {
-                        echo "Deploying using docker-compose.release.yml"
-                        sh "docker compose -f docker-compose.release.yml up -d"
-                    }
-                }
-            }
-            post {
-                always {
-                    echo "Deploying"
-                }
-                success {
-                    echo "Deployment Successful"
-                }
-                failure {
-                    echo "Deployment Failed"
+                    echo "Deployment failed."
                 }
             }
         }
     }
+
     post {
+        always {
+            echo "Pipeline execution completed."
+        }
         success {
-            echo "Pipeline execution successful"
+            echo "Pipeline executed successfully."
         }
         failure {
-            echo "Pipeline execution failed"
+            echo "Pipeline execution failed."
         }
     }
 }

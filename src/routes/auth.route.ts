@@ -1,21 +1,20 @@
 import { Router } from "express";
 import { AuthController } from "../controllers/auth.controller";
 import { AuthService } from "../services/auth.service";
-import { validateRequest } from "../middlewares/validate.middleware";
-import { loginValidationRules } from "../utils/validators/auth.util";
 import { UserService } from "../services/user.service";
+import AuthMiddleware from "../middlewares/auth.middleware";
+import { CryptoService } from "../services/crypto.service";
 
 const router = Router();
 const authService = new AuthService();
 const userService = new UserService();
-const authController = new AuthController(authService, userService);
+const cryptoService = new CryptoService();
 
-// Route for login
-router.post(
-  "/login",
-  loginValidationRules(),
-  validateRequest,
- authController.login
-);
+
+const authController = new AuthController(authService, userService);
+const authMiddleware = new AuthMiddleware(userService, cryptoService, authService);
+
+router.post("/login", authController.login);
+router.get("/me", authMiddleware.authenticate, authController.me);
 
 export { router as authRouter };

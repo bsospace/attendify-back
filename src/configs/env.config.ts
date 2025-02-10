@@ -19,6 +19,12 @@ function requireEnv(key: string): string {
 export const envConfig = {
   appPort: parseInt(requireEnv('APP_PORT')),
   nodeEnv: requireEnv('NODE_ENV'),
+  app:{
+    frontendUrl: requireEnv('FRONTEND_URL'),
+    backendUrl: requireEnv('BACKEND_URL'),
+    serviceName: requireEnv('SERVICE_NAME'),
+    cookieDomain: requireEnv('COOKIE_DOMAIN'),
+  },
   database: {
     url: requireEnv('DATABASE_URL'),
     user: requireEnv('POSTGRES_USER'),
@@ -29,6 +35,7 @@ export const envConfig = {
   redis: {
     port: parseInt(requireEnv('REDIS_PORT')),
     password: requireEnv('REDIS_PASSWORD'),
+    host: requireEnv('REDIS_HOST')
   },
   pgAdmin: {
     email: requireEnv('PGADMIN_DEFAULT_EMAIL'),

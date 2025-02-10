@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -15,7 +9,7 @@ datasource db {
 
 model activities {
   id                String              @id @default(uuid())
-  name              String              @unique
+  name              String
   start_at          DateTime
   end_at            DateTime
   start_check_in    DateTime
@@ -27,12 +21,18 @@ model activities {
   check_radius      Float               @default(20)
   limit             Int?
   is_register       Boolean             @default(false)
-  event_id          String              @unique
+  event_id          String
   hour              Float               @default(0)
   event             events              @relation(fields: [event_id], references: [id], onDelete: Cascade)
   activity_location activity_location[]
   target_groups     target_groups[]
   user_activity     user_activity[]
+
+  default_hour_type_id String?
+  default_hour_type    hour_types?    @relation(fields: [default_hour_type_id], references: [id])
+
+  default_join_type_id String?
+  default_join_type    join_types?    @relation(fields: [default_join_type_id], references: [id])
 
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt
@@ -55,12 +55,13 @@ model activity_location {
 
 model events {
   id            String       @id @default(uuid())
-  name          String       @unique
+  name          String
   event_type_id String
   start_date    DateTime
+  announce      Boolean       @default(true)
   end_date      DateTime
   published_at  DateTime?
-  description   String?
+  description   String?      @default("")
   banner        String?
   year          Int
   file          String?
@@ -75,7 +76,8 @@ model events {
 
 model event_types {
   id     String   @id @default(uuid())
-  name   String   @unique
+  name   String   
+  announce      Boolean       @default(true)
   events events[]
 
   created_at DateTime  @default(now())
@@ -86,8 +88,8 @@ model event_types {
 
 model sub_locations {
   id                String              @id @default(uuid())
-  name              String              @unique
-  description       String?
+  name              String
+  description       String?             @default("")
   location_id       String
   location          locations           @relation(fields: [location_id], references: [id], onDelete: Cascade)
   activity_location activity_location[]
@@ -100,7 +102,7 @@ model sub_locations {
 
 model locations {
   id            String          @id @default(uuid())
-  name          String          @unique
+  name          String          
   latitude      Float
   longitude     Float
   sub_locations sub_locations[]
@@ -126,8 +128,8 @@ model target_groups {
 
 model groups {
   id            String          @id @default(uuid())
-  name          String          @unique
-  description   String?
+  name          String          
+  description   String?         @default("")
   target_groups target_groups[]
   user_group    user_group[]
 
@@ -162,10 +164,11 @@ model user_activity {
 
 model users {
   id               String             @id @default(uuid())
-  username         String             @unique
+  username         String             
   first_name       String
   last_name        String
-  email            String             @unique
+  email            String             
+  avatar           String?            @default("")
   user_group       user_group[]
   user_role        user_role[]
   user_permissions user_permissions[]
@@ -218,8 +221,8 @@ model user_role {
 
 model permissions {
   id               String             @id @default(uuid())
-  name             String             @unique
-  description      String?
+  name             String             
+  description      String?            @default("")
   user_permissions user_permissions[]
   role_permissions role_permissions[]
 
@@ -231,8 +234,8 @@ model permissions {
 
 model roles {
   id               String             @id @default(uuid())
-  name             String             @unique
-  description      String?
+  name             String             
+  description      String?            @default("")
   role_permissions role_permissions[]
   user_role        user_role[]
 
@@ -253,13 +256,16 @@ model role_permissions {
   updated_at DateTime  @updatedAt
   deleted_at DateTime?
   data_logs  Json?
+
+  @@unique([role_id, permission_id])
 }
 
 model hour_types {
   id            String          @id @default(uuid())
-  name          String          @unique
-  description   String?
+  name          String          
+  description   String?         @default("")
   user_activity user_activity[]
+  activities    activities[]
 
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt
@@ -269,9 +275,10 @@ model hour_types {
 
 model join_types {
   id            String          @id @default(uuid())
-  name          String          @unique
-  description   String?
+  name          String          
+  description   String?         @default("")
   user_activity user_activity[]
+  activities    activities[]
 
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt
