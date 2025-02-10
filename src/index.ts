@@ -13,3 +13,9 @@ app.use("/api/v1/sublocation", subLocationRouter);
 app.use("/api/v1/group", groupRouter);
 app.use("/api/v1/user", userRouter);
 app.use('/api/v1/project', projectRouter);
+
+// Health Check Route
+app.get("/health", (req, res) => {
+    res.status(200).json({ status: "ok", message: "Service is running" });
+  });
+  
